@@ -1,0 +1,24 @@
+package controller
+
+import (
+	ctrl "sigs.k8s.io/controller-runtime"
+
+	"github.com/crossplane/crossplane-runtime/pkg/controller"
+)
+
+// Setup creates all controllers with the supplied manager and logger.
+func Setup(mgr ctrl.Manager, o controller.Options) error {
+	for _, setup := range []func(ctrl.Manager, controller.Options) error{
+		SetupProject,
+		SetupDatabase,
+		SetupReplica,
+		SetupCustomDomain,
+		SetupCacheRule,
+		SetupSpendLimit,
+	} {
+		if err := setup(mgr, o); err != nil {
+			return err
+		}
+	}
+	return nil
+}

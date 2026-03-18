@@ -1,0 +1,336 @@
+package v1alpha1
+
+import (
+	xpv1 "github.com/crossplane/crossplane-runtime/apis/common/v1"
+)
+
+// Managed resource interface methods for Project.
+
+func (p *Project) GetCondition(ct xpv1.ConditionType) xpv1.Condition {
+	return p.Status.GetCondition(ct)
+}
+
+func (p *Project) SetConditions(c ...xpv1.Condition) {
+	p.Status.SetConditions(c...)
+}
+
+func (p *Project) GetProviderConfigReference() *xpv1.Reference {
+	return p.Spec.ProviderConfigReference
+}
+
+func (p *Project) SetProviderConfigReference(r *xpv1.Reference) {
+	p.Spec.ProviderConfigReference = r
+}
+
+func (p *Project) GetDeletionPolicy() xpv1.DeletionPolicy {
+	return p.Spec.DeletionPolicy
+}
+
+func (p *Project) SetDeletionPolicy(dp xpv1.DeletionPolicy) {
+	p.Spec.DeletionPolicy = dp
+}
+
+func (p *Project) GetManagementPolicies() xpv1.ManagementPolicies {
+	return p.Spec.ManagementPolicies
+}
+
+func (p *Project) SetManagementPolicies(mp xpv1.ManagementPolicies) {
+	p.Spec.ManagementPolicies = mp
+}
+
+func (p *Project) GetWriteConnectionSecretToReference() *xpv1.SecretReference {
+	return p.Spec.WriteConnectionSecretToReference
+}
+
+func (p *Project) SetWriteConnectionSecretToReference(r *xpv1.SecretReference) {
+	p.Spec.WriteConnectionSecretToReference = r
+}
+
+func (p *Project) GetPublishConnectionDetailsTo() *xpv1.PublishConnectionDetailsTo {
+	return p.Spec.PublishConnectionDetailsTo
+}
+
+func (p *Project) SetPublishConnectionDetailsTo(r *xpv1.PublishConnectionDetailsTo) {
+	p.Spec.PublishConnectionDetailsTo = r
+}
+
+// Managed resource interface methods for Database.
+
+func (d *Database) GetCondition(ct xpv1.ConditionType) xpv1.Condition {
+	return d.Status.GetCondition(ct)
+}
+
+func (d *Database) SetConditions(c ...xpv1.Condition) {
+	d.Status.SetConditions(c...)
+}
+
+func (d *Database) GetProviderConfigReference() *xpv1.Reference {
+	return d.Spec.ProviderConfigReference
+}
+
+func (d *Database) SetProviderConfigReference(r *xpv1.Reference) {
+	d.Spec.ProviderConfigReference = r
+}
+
+func (d *Database) GetDeletionPolicy() xpv1.DeletionPolicy {
+	return d.Spec.DeletionPolicy
+}
+
+func (d *Database) SetDeletionPolicy(dp xpv1.DeletionPolicy) {
+	d.Spec.DeletionPolicy = dp
+}
+
+func (d *Database) GetManagementPolicies() xpv1.ManagementPolicies {
+	return d.Spec.ManagementPolicies
+}
+
+func (d *Database) SetManagementPolicies(mp xpv1.ManagementPolicies) {
+	d.Spec.ManagementPolicies = mp
+}
+
+func (d *Database) GetWriteConnectionSecretToReference() *xpv1.SecretReference {
+	return d.Spec.WriteConnectionSecretToReference
+}
+
+func (d *Database) SetWriteConnectionSecretToReference(r *xpv1.SecretReference) {
+	d.Spec.WriteConnectionSecretToReference = r
+}
+
+func (d *Database) GetPublishConnectionDetailsTo() *xpv1.PublishConnectionDetailsTo {
+	return d.Spec.PublishConnectionDetailsTo
+}
+
+func (d *Database) SetPublishConnectionDetailsTo(r *xpv1.PublishConnectionDetailsTo) {
+	d.Spec.PublishConnectionDetailsTo = r
+}
+
+// Managed resource interface methods for Replica.
+
+func (r *Replica) GetCondition(ct xpv1.ConditionType) xpv1.Condition {
+	return r.Status.GetCondition(ct)
+}
+
+func (r *Replica) SetConditions(c ...xpv1.Condition) {
+	r.Status.SetConditions(c...)
+}
+
+func (r *Replica) GetProviderConfigReference() *xpv1.Reference {
+	return r.Spec.ProviderConfigReference
+}
+
+func (r *Replica) SetProviderConfigReference(ref *xpv1.Reference) {
+	r.Spec.ProviderConfigReference = ref
+}
+
+func (r *Replica) GetDeletionPolicy() xpv1.DeletionPolicy {
+	return r.Spec.DeletionPolicy
+}
+
+func (r *Replica) SetDeletionPolicy(dp xpv1.DeletionPolicy) {
+	r.Spec.DeletionPolicy = dp
+}
+
+func (r *Replica) GetManagementPolicies() xpv1.ManagementPolicies {
+	return r.Spec.ManagementPolicies
+}
+
+func (r *Replica) SetManagementPolicies(mp xpv1.ManagementPolicies) {
+	r.Spec.ManagementPolicies = mp
+}
+
+func (r *Replica) GetWriteConnectionSecretToReference() *xpv1.SecretReference {
+	return r.Spec.WriteConnectionSecretToReference
+}
+
+func (r *Replica) SetWriteConnectionSecretToReference(ref *xpv1.SecretReference) {
+	r.Spec.WriteConnectionSecretToReference = ref
+}
+
+func (r *Replica) GetPublishConnectionDetailsTo() *xpv1.PublishConnectionDetailsTo {
+	return r.Spec.PublishConnectionDetailsTo
+}
+
+func (r *Replica) SetPublishConnectionDetailsTo(ref *xpv1.PublishConnectionDetailsTo) {
+	r.Spec.PublishConnectionDetailsTo = ref
+}
+
+// Managed resource interface methods for CustomDomain.
+
+func (cd *CustomDomain) GetCondition(ct xpv1.ConditionType) xpv1.Condition {
+	return cd.Status.GetCondition(ct)
+}
+
+func (cd *CustomDomain) SetConditions(c ...xpv1.Condition) {
+	cd.Status.SetConditions(c...)
+}
+
+func (cd *CustomDomain) GetProviderConfigReference() *xpv1.Reference {
+	return cd.Spec.ProviderConfigReference
+}
+
+func (cd *CustomDomain) SetProviderConfigReference(ref *xpv1.Reference) {
+	cd.Spec.ProviderConfigReference = ref
+}
+
+func (cd *CustomDomain) GetDeletionPolicy() xpv1.DeletionPolicy {
+	return cd.Spec.DeletionPolicy
+}
+
+func (cd *CustomDomain) SetDeletionPolicy(dp xpv1.DeletionPolicy) {
+	cd.Spec.DeletionPolicy = dp
+}
+
+func (cd *CustomDomain) GetManagementPolicies() xpv1.ManagementPolicies {
+	return cd.Spec.ManagementPolicies
+}
+
+func (cd *CustomDomain) SetManagementPolicies(mp xpv1.ManagementPolicies) {
+	cd.Spec.ManagementPolicies = mp
+}
+
+func (cd *CustomDomain) GetWriteConnectionSecretToReference() *xpv1.SecretReference {
+	return cd.Spec.WriteConnectionSecretToReference
+}
+
+func (cd *CustomDomain) SetWriteConnectionSecretToReference(ref *xpv1.SecretReference) {
+	cd.Spec.WriteConnectionSecretToReference = ref
+}
+
+func (cd *CustomDomain) GetPublishConnectionDetailsTo() *xpv1.PublishConnectionDetailsTo {
+	return cd.Spec.PublishConnectionDetailsTo
+}
+
+func (cd *CustomDomain) SetPublishConnectionDetailsTo(ref *xpv1.PublishConnectionDetailsTo) {
+	cd.Spec.PublishConnectionDetailsTo = ref
+}
+
+// Managed resource interface methods for CacheRule.
+
+func (cr *CacheRule) GetCondition(ct xpv1.ConditionType) xpv1.Condition {
+	return cr.Status.GetCondition(ct)
+}
+
+func (cr *CacheRule) SetConditions(c ...xpv1.Condition) {
+	cr.Status.SetConditions(c...)
+}
+
+func (cr *CacheRule) GetProviderConfigReference() *xpv1.Reference {
+	return cr.Spec.ProviderConfigReference
+}
+
+func (cr *CacheRule) SetProviderConfigReference(ref *xpv1.Reference) {
+	cr.Spec.ProviderConfigReference = ref
+}
+
+func (cr *CacheRule) GetDeletionPolicy() xpv1.DeletionPolicy {
+	return cr.Spec.DeletionPolicy
+}
+
+func (cr *CacheRule) SetDeletionPolicy(dp xpv1.DeletionPolicy) {
+	cr.Spec.DeletionPolicy = dp
+}
+
+func (cr *CacheRule) GetManagementPolicies() xpv1.ManagementPolicies {
+	return cr.Spec.ManagementPolicies
+}
+
+func (cr *CacheRule) SetManagementPolicies(mp xpv1.ManagementPolicies) {
+	cr.Spec.ManagementPolicies = mp
+}
+
+func (cr *CacheRule) GetWriteConnectionSecretToReference() *xpv1.SecretReference {
+	return cr.Spec.WriteConnectionSecretToReference
+}
+
+func (cr *CacheRule) SetWriteConnectionSecretToReference(ref *xpv1.SecretReference) {
+	cr.Spec.WriteConnectionSecretToReference = ref
+}
+
+func (cr *CacheRule) GetPublishConnectionDetailsTo() *xpv1.PublishConnectionDetailsTo {
+	return cr.Spec.PublishConnectionDetailsTo
+}
+
+func (cr *CacheRule) SetPublishConnectionDetailsTo(ref *xpv1.PublishConnectionDetailsTo) {
+	cr.Spec.PublishConnectionDetailsTo = ref
+}
+
+// Managed resource interface methods for SpendLimit.
+
+func (sl *SpendLimit) GetCondition(ct xpv1.ConditionType) xpv1.Condition {
+	return sl.Status.GetCondition(ct)
+}
+
+func (sl *SpendLimit) SetConditions(c ...xpv1.Condition) {
+	sl.Status.SetConditions(c...)
+}
+
+func (sl *SpendLimit) GetProviderConfigReference() *xpv1.Reference {
+	return sl.Spec.ProviderConfigReference
+}
+
+func (sl *SpendLimit) SetProviderConfigReference(ref *xpv1.Reference) {
+	sl.Spec.ProviderConfigReference = ref
+}
+
+func (sl *SpendLimit) GetDeletionPolicy() xpv1.DeletionPolicy {
+	return sl.Spec.DeletionPolicy
+}
+
+func (sl *SpendLimit) SetDeletionPolicy(dp xpv1.DeletionPolicy) {
+	sl.Spec.DeletionPolicy = dp
+}
+
+func (sl *SpendLimit) GetManagementPolicies() xpv1.ManagementPolicies {
+	return sl.Spec.ManagementPolicies
+}
+
+func (sl *SpendLimit) SetManagementPolicies(mp xpv1.ManagementPolicies) {
+	sl.Spec.ManagementPolicies = mp
+}
+
+func (sl *SpendLimit) GetWriteConnectionSecretToReference() *xpv1.SecretReference {
+	return sl.Spec.WriteConnectionSecretToReference
+}
+
+func (sl *SpendLimit) SetWriteConnectionSecretToReference(ref *xpv1.SecretReference) {
+	sl.Spec.WriteConnectionSecretToReference = ref
+}
+
+func (sl *SpendLimit) GetPublishConnectionDetailsTo() *xpv1.PublishConnectionDetailsTo {
+	return sl.Spec.PublishConnectionDetailsTo
+}
+
+func (sl *SpendLimit) SetPublishConnectionDetailsTo(ref *xpv1.PublishConnectionDetailsTo) {
+	sl.Spec.PublishConnectionDetailsTo = ref
+}
+
+// ProviderConfigUsage interface methods.
+
+func (p *ProviderConfigUsage) GetProviderConfigReference() xpv1.Reference {
+	return p.ProviderConfigUsage.ProviderConfigReference
+}
+
+func (p *ProviderConfigUsage) SetProviderConfigReference(r xpv1.Reference) {
+	p.ProviderConfigUsage.ProviderConfigReference = r
+}
+
+func (p *ProviderConfigUsage) SetResourceReference(r xpv1.TypedReference) {
+	p.ProviderConfigUsage.ResourceReference = r
+}
+
+func (p *ProviderConfigUsage) GetResourceReference() xpv1.TypedReference {
+	return p.ProviderConfigUsage.ResourceReference
+}
+
+// ProviderConfig interface methods.
+
+func (p *ProviderConfig) GetCondition(ct xpv1.ConditionType) xpv1.Condition {
+	// ProviderConfig doesn't have conditions in our simple implementation.
+	return xpv1.Condition{}
+}
+
+func (p *ProviderConfig) SetConditions(_ ...xpv1.Condition) {}
+
+func (p *ProviderConfig) GetUsers() int64 { return 0 }
+
+func (p *ProviderConfig) SetUsers(_ int64) {}
