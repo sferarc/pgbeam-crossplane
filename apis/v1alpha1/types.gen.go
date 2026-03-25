@@ -175,7 +175,7 @@ type ProjectForProvider struct {
 	// +kubebuilder:validation:Maximum=2147483647
 	MaxConnections *int32 `json:"maxConnections,omitempty"`
 
-	// AllowedCidrs is the ip allowlist as cidr ranges (e.g., ["10.0.0.0/8", "203.0.113.5/32"]). when non-empty, only connections from matching ips are accepted. empty array means all ips are allowed (default).
+	// AllowedCidrs is the ip filtering rules as cidr ranges with optional labels. when non-empty, only connections from matching ips are accepted. empty array means all ips are allowed (default). both ipv4 (e.g. 10.0.0.0/8) and ipv6 (e.g. 2001:db8::/32) are supported.
 	// +optional
 	AllowedCidrs []string `json:"allowedCidrs,omitempty"`
 
