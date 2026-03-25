@@ -194,18 +194,6 @@ func (e *projectExternal) Create(ctx context.Context, mg resource.Managed) (mana
 	// If specified, issue an immediate update after creation.
 	updateReq := pgbeam.UpdateProjectRequest{}
 	needsPostCreateUpdate := false
-	if fp.QueriesPerSecond != nil {
-		updateReq.QueriesPerSecond = fp.QueriesPerSecond
-		needsPostCreateUpdate = true
-	}
-	if fp.BurstSize != nil {
-		updateReq.BurstSize = fp.BurstSize
-		needsPostCreateUpdate = true
-	}
-	if fp.MaxConnections != nil {
-		updateReq.MaxConnections = fp.MaxConnections
-		needsPostCreateUpdate = true
-	}
 	if fp.AllowedCidrs != nil {
 		updateReq.AllowedCidrs = &fp.AllowedCidrs
 		needsPostCreateUpdate = true
@@ -264,18 +252,6 @@ func (e *projectExternal) Update(ctx context.Context, mg resource.Managed) (mana
 		req.Tags = &fp.Tags
 		needsUpdate = true
 	}
-	if fp.QueriesPerSecond != nil && (project.QueriesPerSecond == nil || *fp.QueriesPerSecond != *project.QueriesPerSecond) {
-		req.QueriesPerSecond = fp.QueriesPerSecond
-		needsUpdate = true
-	}
-	if fp.BurstSize != nil && (project.BurstSize == nil || *fp.BurstSize != *project.BurstSize) {
-		req.BurstSize = fp.BurstSize
-		needsUpdate = true
-	}
-	if fp.MaxConnections != nil && (project.MaxConnections == nil || *fp.MaxConnections != *project.MaxConnections) {
-		req.MaxConnections = fp.MaxConnections
-		needsUpdate = true
-	}
 	if fp.AllowedCidrs != nil {
 		req.AllowedCidrs = &fp.AllowedCidrs
 		needsUpdate = true
@@ -315,6 +291,15 @@ func projectObservation(p *pgbeam.Project) v1alpha1.ProjectAtProvider {
 	if p.ProxyHost != nil {
 		obs.ProxyHost = *p.ProxyHost
 	}
+	if p.QueriesPerSecond != nil {
+		obs.QueriesPerSecond = *p.QueriesPerSecond
+	}
+	if p.BurstSize != nil {
+		obs.BurstSize = *p.BurstSize
+	}
+	if p.MaxConnections != nil {
+		obs.MaxConnections = *p.MaxConnections
+	}
 	if p.DatabaseCount != nil {
 		obs.DatabaseCount = *p.DatabaseCount
 	}
@@ -346,15 +331,6 @@ func isProjectUpToDate(fp v1alpha1.ProjectForProvider, p *pgbeam.Project) bool {
 				}
 			}
 		}
-	}
-	if fp.QueriesPerSecond != nil && (p.QueriesPerSecond == nil || *fp.QueriesPerSecond != *p.QueriesPerSecond) {
-		return false
-	}
-	if fp.BurstSize != nil && (p.BurstSize == nil || *fp.BurstSize != *p.BurstSize) {
-		return false
-	}
-	if fp.MaxConnections != nil && (p.MaxConnections == nil || *fp.MaxConnections != *p.MaxConnections) {
-		return false
 	}
 	if fp.AllowedCidrs != nil {
 		pSlice := p.AllowedCidrs

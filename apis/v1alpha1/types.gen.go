@@ -157,24 +157,6 @@ type ProjectForProvider struct {
 	// +kubebuilder:validation:Enum=aws;azure;gcp
 	Cloud string `json:"cloud,omitempty"`
 
-	// QueriesPerSecond is the maximum queries per second for this project. 0 means unlimited.
-	// +optional
-	// +kubebuilder:validation:Minimum=0
-	// +kubebuilder:validation:Maximum=2147483647
-	QueriesPerSecond *int32 `json:"queriesPerSecond,omitempty"`
-
-	// BurstSize is the burst allowance above the steady-state rate. 0 uses queries_per_second as burst.
-	// +optional
-	// +kubebuilder:validation:Minimum=0
-	// +kubebuilder:validation:Maximum=2147483647
-	BurstSize *int32 `json:"burstSize,omitempty"`
-
-	// MaxConnections is the maximum concurrent proxy connections. 0 means unlimited.
-	// +optional
-	// +kubebuilder:validation:Minimum=0
-	// +kubebuilder:validation:Maximum=2147483647
-	MaxConnections *int32 `json:"maxConnections,omitempty"`
-
 	// AllowedCidrs is the ip filtering rules as cidr ranges with optional labels. when non-empty, only connections from matching ips are accepted. empty array means all ips are allowed (default). both ipv4 (e.g. 10.0.0.0/8) and ipv6 (e.g. 2001:db8::/32) are supported.
 	// +optional
 	AllowedCidrs []string `json:"allowedCidrs,omitempty"`
@@ -197,6 +179,15 @@ type ProjectAtProvider struct {
 
 	// ProxyHost is the proxy hostname for connecting through pgbeam (e.g., myproject.aws.pgbeam.app).
 	ProxyHost string `json:"proxyHost,omitempty"`
+
+	// QueriesPerSecond is the maximum queries per second for this project. 0 means unlimited.
+	QueriesPerSecond int `json:"queriesPerSecond,omitempty"`
+
+	// BurstSize is the burst allowance above the steady-state rate. 0 uses queries_per_second as burst.
+	BurstSize int `json:"burstSize,omitempty"`
+
+	// MaxConnections is the maximum concurrent proxy connections. 0 means unlimited.
+	MaxConnections int `json:"maxConnections,omitempty"`
 
 	// DatabaseCount is the number of databases attached to this project.
 	DatabaseCount int `json:"databaseCount,omitempty"`
