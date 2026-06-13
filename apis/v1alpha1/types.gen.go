@@ -177,7 +177,7 @@ type ProjectAtProvider struct {
 	// ID is the PgBeam project ID.
 	ID string `json:"id,omitempty"`
 
-	// ProxyHost is the proxy hostname for connecting through pgbeam (e.g., myproject.aws.pgbeam.app).
+	// ProxyHost is the proxy hostname for connecting through pgbeam (e.g., myproject.proxy.pgbeam.app).
 	ProxyHost string `json:"proxyHost,omitempty"`
 
 	// QueriesPerSecond is the maximum queries per second for this project. 0 means unlimited.
