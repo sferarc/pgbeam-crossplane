@@ -198,6 +198,10 @@ func (e *projectExternal) Create(ctx context.Context, mg resource.Managed) (mana
 		updateReq.AllowedCidrs = &fp.AllowedCidrs
 		needsPostCreateUpdate = true
 	}
+	if fp.DefaultPolicyProfileID != nil {
+		updateReq.DefaultPolicyProfileId = fp.DefaultPolicyProfileID
+		needsPostCreateUpdate = true
+	}
 	if fp.Status != "" {
 		v := pgbeam.ProjectStatus(fp.Status)
 		updateReq.Status = &v
@@ -254,6 +258,10 @@ func (e *projectExternal) Update(ctx context.Context, mg resource.Managed) (mana
 	}
 	if fp.AllowedCidrs != nil {
 		req.AllowedCidrs = &fp.AllowedCidrs
+		needsUpdate = true
+	}
+	if fp.DefaultPolicyProfileID != nil && (project.DefaultPolicyProfileId == nil || *fp.DefaultPolicyProfileID != *project.DefaultPolicyProfileId) {
+		req.DefaultPolicyProfileId = fp.DefaultPolicyProfileID
 		needsUpdate = true
 	}
 	if fp.Status != "" && pgbeam.ProjectStatus(fp.Status) != project.Status {
@@ -348,6 +356,9 @@ func isProjectUpToDate(fp v1alpha1.ProjectForProvider, p *pgbeam.Project) bool {
 				}
 			}
 		}
+	}
+	if fp.DefaultPolicyProfileID != nil && (p.DefaultPolicyProfileId == nil || *fp.DefaultPolicyProfileID != *p.DefaultPolicyProfileId) {
+		return false
 	}
 	if fp.Status != "" {
 		if pgbeam.ProjectStatus(fp.Status) != p.Status {

@@ -161,6 +161,10 @@ type ProjectForProvider struct {
 	// +optional
 	AllowedCidrs []string `json:"allowedCidrs,omitempty"`
 
+	// DefaultPolicyProfileID is the when set, passthrough/human connections are enforced against this policy profile.
+	// +optional
+	DefaultPolicyProfileID *string `json:"defaultPolicyProfileID,omitempty"`
+
 	// Status is the project lifecycle status.
 	// +optional
 	// +kubebuilder:validation:Enum=active;suspended;deleted
