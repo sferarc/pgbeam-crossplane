@@ -305,3 +305,203 @@ func (sl *SpendLimit) GetPublishConnectionDetailsTo() *xpv1.PublishConnectionDet
 func (sl *SpendLimit) SetPublishConnectionDetailsTo(ref *xpv1.PublishConnectionDetailsTo) {
 	sl.Spec.PublishConnectionDetailsTo = ref
 }
+
+// Managed resource interface methods for AgentCredential.
+
+func (ac *AgentCredential) GetCondition(ct xpv1.ConditionType) xpv1.Condition {
+	return ac.Status.GetCondition(ct)
+}
+
+func (ac *AgentCredential) SetConditions(c ...xpv1.Condition) {
+	ac.Status.SetConditions(c...)
+}
+
+func (ac *AgentCredential) GetProviderConfigReference() *xpv1.Reference {
+	return ac.Spec.ProviderConfigReference
+}
+
+func (ac *AgentCredential) SetProviderConfigReference(ref *xpv1.Reference) {
+	ac.Spec.ProviderConfigReference = ref
+}
+
+func (ac *AgentCredential) GetDeletionPolicy() xpv1.DeletionPolicy {
+	return ac.Spec.DeletionPolicy
+}
+
+func (ac *AgentCredential) SetDeletionPolicy(dp xpv1.DeletionPolicy) {
+	ac.Spec.DeletionPolicy = dp
+}
+
+func (ac *AgentCredential) GetManagementPolicies() xpv1.ManagementPolicies {
+	return ac.Spec.ManagementPolicies
+}
+
+func (ac *AgentCredential) SetManagementPolicies(mp xpv1.ManagementPolicies) {
+	ac.Spec.ManagementPolicies = mp
+}
+
+func (ac *AgentCredential) GetWriteConnectionSecretToReference() *xpv1.SecretReference {
+	return ac.Spec.WriteConnectionSecretToReference
+}
+
+func (ac *AgentCredential) SetWriteConnectionSecretToReference(ref *xpv1.SecretReference) {
+	ac.Spec.WriteConnectionSecretToReference = ref
+}
+
+func (ac *AgentCredential) GetPublishConnectionDetailsTo() *xpv1.PublishConnectionDetailsTo {
+	return ac.Spec.PublishConnectionDetailsTo
+}
+
+func (ac *AgentCredential) SetPublishConnectionDetailsTo(ref *xpv1.PublishConnectionDetailsTo) {
+	ac.Spec.PublishConnectionDetailsTo = ref
+}
+
+// Managed resource interface methods for PolicyProfile.
+
+func (pp *PolicyProfile) GetCondition(ct xpv1.ConditionType) xpv1.Condition {
+	return pp.Status.GetCondition(ct)
+}
+
+func (pp *PolicyProfile) SetConditions(c ...xpv1.Condition) {
+	pp.Status.SetConditions(c...)
+}
+
+func (pp *PolicyProfile) GetProviderConfigReference() *xpv1.Reference {
+	return pp.Spec.ProviderConfigReference
+}
+
+func (pp *PolicyProfile) SetProviderConfigReference(ref *xpv1.Reference) {
+	pp.Spec.ProviderConfigReference = ref
+}
+
+func (pp *PolicyProfile) GetDeletionPolicy() xpv1.DeletionPolicy {
+	return pp.Spec.DeletionPolicy
+}
+
+func (pp *PolicyProfile) SetDeletionPolicy(dp xpv1.DeletionPolicy) {
+	pp.Spec.DeletionPolicy = dp
+}
+
+func (pp *PolicyProfile) GetManagementPolicies() xpv1.ManagementPolicies {
+	return pp.Spec.ManagementPolicies
+}
+
+func (pp *PolicyProfile) SetManagementPolicies(mp xpv1.ManagementPolicies) {
+	pp.Spec.ManagementPolicies = mp
+}
+
+func (pp *PolicyProfile) GetWriteConnectionSecretToReference() *xpv1.SecretReference {
+	return pp.Spec.WriteConnectionSecretToReference
+}
+
+func (pp *PolicyProfile) SetWriteConnectionSecretToReference(ref *xpv1.SecretReference) {
+	pp.Spec.WriteConnectionSecretToReference = ref
+}
+
+func (pp *PolicyProfile) GetPublishConnectionDetailsTo() *xpv1.PublishConnectionDetailsTo {
+	return pp.Spec.PublishConnectionDetailsTo
+}
+
+func (pp *PolicyProfile) SetPublishConnectionDetailsTo(ref *xpv1.PublishConnectionDetailsTo) {
+	pp.Spec.PublishConnectionDetailsTo = ref
+}
+
+// Managed resource interface methods for WebhookEndpoint.
+
+func (we *WebhookEndpoint) GetCondition(ct xpv1.ConditionType) xpv1.Condition {
+	return we.Status.GetCondition(ct)
+}
+
+func (we *WebhookEndpoint) SetConditions(c ...xpv1.Condition) {
+	we.Status.SetConditions(c...)
+}
+
+func (we *WebhookEndpoint) GetProviderConfigReference() *xpv1.Reference {
+	return we.Spec.ProviderConfigReference
+}
+
+func (we *WebhookEndpoint) SetProviderConfigReference(ref *xpv1.Reference) {
+	we.Spec.ProviderConfigReference = ref
+}
+
+func (we *WebhookEndpoint) GetDeletionPolicy() xpv1.DeletionPolicy {
+	return we.Spec.DeletionPolicy
+}
+
+func (we *WebhookEndpoint) SetDeletionPolicy(dp xpv1.DeletionPolicy) {
+	we.Spec.DeletionPolicy = dp
+}
+
+func (we *WebhookEndpoint) GetManagementPolicies() xpv1.ManagementPolicies {
+	return we.Spec.ManagementPolicies
+}
+
+func (we *WebhookEndpoint) SetManagementPolicies(mp xpv1.ManagementPolicies) {
+	we.Spec.ManagementPolicies = mp
+}
+
+func (we *WebhookEndpoint) GetWriteConnectionSecretToReference() *xpv1.SecretReference {
+	return we.Spec.WriteConnectionSecretToReference
+}
+
+func (we *WebhookEndpoint) SetWriteConnectionSecretToReference(ref *xpv1.SecretReference) {
+	we.Spec.WriteConnectionSecretToReference = ref
+}
+
+func (we *WebhookEndpoint) GetPublishConnectionDetailsTo() *xpv1.PublishConnectionDetailsTo {
+	return we.Spec.PublishConnectionDetailsTo
+}
+
+func (we *WebhookEndpoint) SetPublishConnectionDetailsTo(ref *xpv1.PublishConnectionDetailsTo) {
+	we.Spec.PublishConnectionDetailsTo = ref
+}
+
+// Managed resource interface methods for SelfHostEnrollment.
+
+func (she *SelfHostEnrollment) GetCondition(ct xpv1.ConditionType) xpv1.Condition {
+	return she.Status.GetCondition(ct)
+}
+
+func (she *SelfHostEnrollment) SetConditions(c ...xpv1.Condition) {
+	she.Status.SetConditions(c...)
+}
+
+func (she *SelfHostEnrollment) GetProviderConfigReference() *xpv1.Reference {
+	return she.Spec.ProviderConfigReference
+}
+
+func (she *SelfHostEnrollment) SetProviderConfigReference(ref *xpv1.Reference) {
+	she.Spec.ProviderConfigReference = ref
+}
+
+func (she *SelfHostEnrollment) GetDeletionPolicy() xpv1.DeletionPolicy {
+	return she.Spec.DeletionPolicy
+}
+
+func (she *SelfHostEnrollment) SetDeletionPolicy(dp xpv1.DeletionPolicy) {
+	she.Spec.DeletionPolicy = dp
+}
+
+func (she *SelfHostEnrollment) GetManagementPolicies() xpv1.ManagementPolicies {
+	return she.Spec.ManagementPolicies
+}
+
+func (she *SelfHostEnrollment) SetManagementPolicies(mp xpv1.ManagementPolicies) {
+	she.Spec.ManagementPolicies = mp
+}
+
+func (she *SelfHostEnrollment) GetWriteConnectionSecretToReference() *xpv1.SecretReference {
+	return she.Spec.WriteConnectionSecretToReference
+}
+
+func (she *SelfHostEnrollment) SetWriteConnectionSecretToReference(ref *xpv1.SecretReference) {
+	she.Spec.WriteConnectionSecretToReference = ref
+}
+
+func (she *SelfHostEnrollment) GetPublishConnectionDetailsTo() *xpv1.PublishConnectionDetailsTo {
+	return she.Spec.PublishConnectionDetailsTo
+}
+
+func (she *SelfHostEnrollment) SetPublishConnectionDetailsTo(ref *xpv1.PublishConnectionDetailsTo) {
+	she.Spec.PublishConnectionDetailsTo = ref
+}

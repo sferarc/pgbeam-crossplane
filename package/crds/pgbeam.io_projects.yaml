@@ -1,0 +1,590 @@
+---
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  annotations:
+    controller-gen.kubebuilder.io/version: v0.16.0
+  name: projects.pgbeam.io
+spec:
+  group: pgbeam.io
+  names:
+    categories:
+    - crossplane
+    - managed
+    - pgbeam
+    kind: Project
+    listKind: ProjectList
+    plural: projects
+    singular: project
+  scope: Cluster
+  versions:
+  - additionalPrinterColumns:
+    - jsonPath: .status.conditions[?(@.type=='Ready')].status
+      name: READY
+      type: string
+    - jsonPath: .status.conditions[?(@.type=='Synced')].status
+      name: SYNCED
+      type: string
+    - jsonPath: .metadata.annotations.crossplane\.io/external-name
+      name: EXTERNAL-NAME
+      type: string
+    - jsonPath: .metadata.creationTimestamp
+      name: AGE
+      type: date
+    name: v1alpha1
+    schema:
+      openAPIV3Schema:
+        description: Project is a managed resource that represents a PgBeam Project.
+        properties:
+          apiVersion:
+            description: |-
+              APIVersion defines the versioned schema of this representation of an object.
+              Servers should convert recognized schemas to the latest internal value, and
+              may reject unrecognized values.
+              More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources
+            type: string
+          kind:
+            description: |-
+              Kind is a string value representing the REST resource this object represents.
+              Servers may infer this from the endpoint the client submits requests to.
+              Cannot be updated.
+              In CamelCase.
+              More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds
+            type: string
+          metadata:
+            type: object
+          spec:
+            description: ProjectSpec defines the desired state of a Project.
+            properties:
+              deletionPolicy:
+                default: Delete
+                description: |-
+                  DeletionPolicy specifies what will happen to the underlying external
+                  when this managed resource is deleted - either "Delete" or "Orphan" the
+                  external resource.
+                  This field is planned to be deprecated in favor of the ManagementPolicies
+                  field in a future release. Currently, both could be set independently and
+                  non-default values would be honored if the feature flag is enabled.
+                  See the design doc for more information: https://github.com/crossplane/crossplane/blob/499895a25d1a1a0ba1604944ef98ac7a1a71f197/design/design-doc-observe-only-resources.md?plain=1#L223
+                enum:
+                - Orphan
+                - Delete
+                type: string
+              forProvider:
+                description: ProjectForProvider defines the desired state of a Project.
+                properties:
+                  agentsDisabled:
+                    description: AgentsDisabled is the project-level kill-switch.
+                      when true, all agent-credential connections to this project
+                      are blocked at the proxy and live agent sessions are dropped
+                      within seconds. passthrough/human connections are unaffected.
+                    type: boolean
+                  allowedCidrs:
+                    description: AllowedCidrs is the ip filtering rules as cidr ranges
+                      with optional labels. when non-empty, only connections from
+                      matching ips are accepted. empty array means all ips are allowed
+                      (default). both ipv4 (e.g. 10.0.0.0/8) and ipv6 (e.g. 2001:db8::/32)
+                      are supported.
+                    items:
+                      description: CidrEntryParameters is one entry of ip filtering
+                        rules as cidr ranges with optional labels. when non-empty,
+                        only connections from matching ips are accepted. empty array
+                        means all ips are allowed (default). both ipv4 (e.g. 10.0.0.0/8)
+                        and ipv6 (e.g. 2001:db8::/32) are supported.
+                      properties:
+                        cidr:
+                          description: Cidr is the cidr range in ipv4 (e.g. 203.0.113.0/24)
+                            or ipv6 (e.g. 2001:db8::/32) notation. a plain ip without
+                            prefix length defaults to /32 (ipv4) or /128 (ipv6).
+                          type: string
+                        label:
+                          description: Label is the optional human-readable label
+                            for this cidr entry (e.g. "office", "vpc").
+                          type: string
+                      required:
+                      - cidr
+                      type: object
+                    type: array
+                  cloud:
+                    description: Cloud is the cloud provider where the project runs.
+                    enum:
+                    - aws
+                    - azure
+                    - gcp
+                    type: string
+                  database:
+                    description: Database is the request body for registering an upstream
+                      database.
+                    properties:
+                      autoReadRouting:
+                        default: false
+                        description: AutoReadRouting is the when enabled and replicas
+                          are configured, select queries automatically route to read
+                          replicas without requiring the @pgbeam:replica sql annotation.
+                        type: boolean
+                      cacheConfig:
+                        description: CacheConfig is the query cache configuration.
+                        properties:
+                          enabled:
+                            default: true
+                            description: Enabled is the whether query caching is enabled.
+                              when false, all queries bypass the cache.
+                            type: boolean
+                          maxEntries:
+                            default: 10000
+                            description: MaxEntries is the maximum number of cached
+                              query results.
+                            maximum: 1000000
+                            minimum: 0
+                            type: integer
+                          swrSeconds:
+                            default: 30
+                            description: SWRSeconds is the stale-while-revalidate
+                              window in seconds.
+                            maximum: 86400
+                            minimum: 0
+                            type: integer
+                          ttlSeconds:
+                            default: 60
+                            description: TTLSeconds is the cache ttl in seconds for
+                              query results.
+                            maximum: 86400
+                            minimum: 0
+                            type: integer
+                        required:
+                        - enabled
+                        - maxEntries
+                        - swrSeconds
+                        - ttlSeconds
+                        type: object
+                      host:
+                        description: Host is the postgresql host.
+                        type: string
+                      name:
+                        description: Name is the postgresql database name.
+                        type: string
+                      passwordSecretRef:
+                        description: PasswordSecretRef is the postgresql password.
+                          stored encrypted at rest.
+                        properties:
+                          key:
+                            description: The key to select.
+                            type: string
+                          name:
+                            description: Name of the secret.
+                            type: string
+                          namespace:
+                            description: Namespace of the secret.
+                            type: string
+                        required:
+                        - key
+                        - name
+                        - namespace
+                        type: object
+                      poolConfig:
+                        description: PoolConfig is the connection pool configuration.
+                        properties:
+                          maxActive:
+                            default: 200
+                            description: MaxActive is the maximum concurrent upstream
+                              connections per pool.
+                            maximum: 10000
+                            minimum: 1
+                            type: integer
+                          minPoolSize:
+                            default: 1
+                            description: MinPoolSize is the minimum idle connections
+                              maintained.
+                            maximum: 10000
+                            minimum: 1
+                            type: integer
+                          poolMode:
+                            description: PoolMode is the connection pool mode.
+                            enum:
+                            - session
+                            - transaction
+                            - statement
+                            type: string
+                          poolSize:
+                            default: 10
+                            description: PoolSize is the maximum connections in the
+                              pool.
+                            maximum: 10000
+                            minimum: 1
+                            type: integer
+                        required:
+                        - minPoolSize
+                        - poolMode
+                        - poolSize
+                        type: object
+                      poolRegion:
+                        description: PoolRegion is the region where the connection
+                          pool is maintained (near the database). when set and different
+                          from the client's edge region, queries are relayed through
+                          the pool region's data plane. empty means direct connection.
+                        type: string
+                      port:
+                        description: Port is the postgresql port.
+                        maximum: 65535
+                        minimum: 1
+                        type: integer
+                      queryTimeoutMs:
+                        default: 0
+                        description: QueryTimeoutMs is the query timeout in milliseconds.
+                          when set (> 0), the proxy sends set statement_timeout on
+                          upstream connections. 0 means disabled (default).
+                        maximum: 300000
+                        minimum: 0
+                        type: integer
+                      role:
+                        default: primary
+                        description: Role is the database role. primary receives writes,
+                          replicas receive reads.
+                        enum:
+                        - primary
+                        - replica
+                        type: string
+                      sslMode:
+                        description: SSLMode is the postgresql ssl connection mode.
+                        enum:
+                        - disable
+                        - allow
+                        - prefer
+                        - require
+                        - verify-ca
+                        - verify-full
+                        type: string
+                      username:
+                        description: Username is the postgresql username.
+                        type: string
+                    required:
+                    - host
+                    - name
+                    - passwordSecretRef
+                    - port
+                    - username
+                    type: object
+                  defaultPolicyProfileID:
+                    description: DefaultPolicyProfileID is the when set, passthrough/human
+                      connections are enforced against this policy profile.
+                    type: string
+                  description:
+                    description: Description is the optional project description.
+                    type: string
+                  name:
+                    description: Name is the human-readable project name.
+                    type: string
+                  orgID:
+                    description: OrgID is the better auth organization id that owns
+                      this project.
+                    type: string
+                  residency:
+                    default: any
+                    description: Residency is the data-residency requirement for the
+                      project. "any" (default) lets queries be served from the nearest
+                      data-plane metro. "us" or "eu" require the serving metro to
+                      be in that jurisdiction; the proxy fails a connection closed
+                      when it is served from a metro outside the required jurisdiction,
+                      so regulated workloads never process outside their permitted
+                      region.
+                    enum:
+                    - any
+                    - us
+                    - eu
+                    type: string
+                  selfHosted:
+                    description: 'SelfHosted is the when true, this project''s data
+                      plane runs in the customer''s own vpc/cluster (byoc): the control
+                      plane does not provision hosted infra, and a self-hosted proxy
+                      dials home over the config/audit grpc stream. requires the scale
+                      or enterprise plan.'
+                    type: boolean
+                  status:
+                    description: Status is the project lifecycle status.
+                    enum:
+                    - active
+                    - suspended
+                    - deleted
+                    type: string
+                  tags:
+                    description: Tags is the user-defined labels applied to the project.
+                    items:
+                      type: string
+                    type: array
+                required:
+                - database
+                - name
+                - orgID
+                type: object
+              managementPolicies:
+                default:
+                - '*'
+                description: |-
+                  THIS IS A BETA FIELD. It is on by default but can be opted out
+                  through a Crossplane feature flag.
+                  ManagementPolicies specify the array of actions Crossplane is allowed to
+                  take on the managed and external resources.
+                  This field is planned to replace the DeletionPolicy field in a future
+                  release. Currently, both could be set independently and non-default
+                  values would be honored if the feature flag is enabled. If both are
+                  custom, the DeletionPolicy field will be ignored.
+                  See the design doc for more information: https://github.com/crossplane/crossplane/blob/499895a25d1a1a0ba1604944ef98ac7a1a71f197/design/design-doc-observe-only-resources.md?plain=1#L223
+                  and this one: https://github.com/crossplane/crossplane/blob/444267e84783136daa93568b364a5f01228cacbe/design/one-pager-ignore-changes.md
+                items:
+                  description: |-
+                    A ManagementAction represents an action that the Crossplane controllers
+                    can take on an external resource.
+                  enum:
+                  - Observe
+                  - Create
+                  - Update
+                  - Delete
+                  - LateInitialize
+                  - '*'
+                  type: string
+                type: array
+              providerConfigRef:
+                default:
+                  name: default
+                description: |-
+                  ProviderConfigReference specifies how the provider that will be used to
+                  create, observe, update, and delete this managed resource should be
+                  configured.
+                properties:
+                  name:
+                    description: Name of the referenced object.
+                    type: string
+                  policy:
+                    description: Policies for referencing.
+                    properties:
+                      resolution:
+                        default: Required
+                        description: |-
+                          Resolution specifies whether resolution of this reference is required.
+                          The default is 'Required', which means the reconcile will fail if the
+                          reference cannot be resolved. 'Optional' means this reference will be
+                          a no-op if it cannot be resolved.
+                        enum:
+                        - Required
+                        - Optional
+                        type: string
+                      resolve:
+                        description: |-
+                          Resolve specifies when this reference should be resolved. The default
+                          is 'IfNotPresent', which will attempt to resolve the reference only when
+                          the corresponding field is not present. Use 'Always' to resolve the
+                          reference on every reconcile.
+                        enum:
+                        - Always
+                        - IfNotPresent
+                        type: string
+                    type: object
+                required:
+                - name
+                type: object
+              publishConnectionDetailsTo:
+                description: |-
+                  PublishConnectionDetailsTo specifies the connection secret config which
+                  contains a name, metadata and a reference to secret store config to
+                  which any connection details for this managed resource should be written.
+                  Connection details frequently include the endpoint, username,
+                  and password required to connect to the managed resource.
+                properties:
+                  configRef:
+                    default:
+                      name: default
+                    description: |-
+                      SecretStoreConfigRef specifies which secret store config should be used
+                      for this ConnectionSecret.
+                    properties:
+                      name:
+                        description: Name of the referenced object.
+                        type: string
+                      policy:
+                        description: Policies for referencing.
+                        properties:
+                          resolution:
+                            default: Required
+                            description: |-
+                              Resolution specifies whether resolution of this reference is required.
+                              The default is 'Required', which means the reconcile will fail if the
+                              reference cannot be resolved. 'Optional' means this reference will be
+                              a no-op if it cannot be resolved.
+                            enum:
+                            - Required
+                            - Optional
+                            type: string
+                          resolve:
+                            description: |-
+                              Resolve specifies when this reference should be resolved. The default
+                              is 'IfNotPresent', which will attempt to resolve the reference only when
+                              the corresponding field is not present. Use 'Always' to resolve the
+                              reference on every reconcile.
+                            enum:
+                            - Always
+                            - IfNotPresent
+                            type: string
+                        type: object
+                    required:
+                    - name
+                    type: object
+                  metadata:
+                    description: Metadata is the metadata for connection secret.
+                    properties:
+                      annotations:
+                        additionalProperties:
+                          type: string
+                        description: |-
+                          Annotations are the annotations to be added to connection secret.
+                          - For Kubernetes secrets, this will be used as "metadata.annotations".
+                          - It is up to Secret Store implementation for others store types.
+                        type: object
+                      labels:
+                        additionalProperties:
+                          type: string
+                        description: |-
+                          Labels are the labels/tags to be added to connection secret.
+                          - For Kubernetes secrets, this will be used as "metadata.labels".
+                          - It is up to Secret Store implementation for others store types.
+                        type: object
+                      type:
+                        description: |-
+                          Type is the SecretType for the connection secret.
+                          - Only valid for Kubernetes Secret Stores.
+                        type: string
+                    type: object
+                  name:
+                    description: Name is the name of the connection secret.
+                    type: string
+                required:
+                - name
+                type: object
+              writeConnectionSecretToRef:
+                description: |-
+                  WriteConnectionSecretToReference specifies the namespace and name of a
+                  Secret to which any connection details for this managed resource should
+                  be written. Connection details frequently include the endpoint, username,
+                  and password required to connect to the managed resource.
+                  This field is planned to be replaced in a future release in favor of
+                  PublishConnectionDetailsTo. Currently, both could be set independently
+                  and connection details would be published to both without affecting
+                  each other.
+                properties:
+                  name:
+                    description: Name of the secret.
+                    type: string
+                  namespace:
+                    description: Namespace of the secret.
+                    type: string
+                required:
+                - name
+                - namespace
+                type: object
+            required:
+            - forProvider
+            type: object
+          status:
+            description: ProjectStatus defines the observed state of a Project.
+            properties:
+              atProvider:
+                description: ProjectAtProvider defines the observed state of a Project.
+                properties:
+                  activeConnections:
+                    description: ActiveConnections is the current active connections
+                      (latest metrics snapshot). 0 when no metrics data.
+                    type: integer
+                  burstSize:
+                    description: BurstSize is the burst allowance above the steady-state
+                      rate. 0 uses queries_per_second as burst.
+                    type: integer
+                  createdAt:
+                    description: CreatedAt is the when the project was created.
+                    type: string
+                  databaseCount:
+                    description: DatabaseCount is the number of databases attached
+                      to this project.
+                    type: integer
+                  id:
+                    description: ID is the PgBeam project ID.
+                    type: string
+                  maxConnections:
+                    description: MaxConnections is the maximum concurrent proxy connections.
+                      0 means unlimited.
+                    type: integer
+                  primaryDatabaseID:
+                    description: PrimaryDatabaseID is the id of the primary database
+                      created with this project.
+                    type: string
+                  proxyHost:
+                    description: ProxyHost is the proxy hostname for connecting through
+                      pgbeam (e.g., myproject.proxy.pgbeam.app).
+                    type: string
+                  queriesPerSecond:
+                    description: QueriesPerSecond is the maximum queries per second
+                      for this project. 0 means unlimited.
+                    type: integer
+                  updatedAt:
+                    description: UpdatedAt is the when the project was last updated.
+                    type: string
+                type: object
+              conditions:
+                description: Conditions of the resource.
+                items:
+                  description: A Condition that may apply to a resource.
+                  properties:
+                    lastTransitionTime:
+                      description: |-
+                        LastTransitionTime is the last time this condition transitioned from one
+                        status to another.
+                      format: date-time
+                      type: string
+                    message:
+                      description: |-
+                        A Message containing details about this condition's last transition from
+                        one status to another, if any.
+                      type: string
+                    observedGeneration:
+                      description: |-
+                        ObservedGeneration represents the .metadata.generation that the condition was set based upon.
+                        For instance, if .metadata.generation is currently 12, but the .status.conditions[x].observedGeneration is 9, the condition is out of date
+                        with respect to the current state of the instance.
+                      format: int64
+                      type: integer
+                    reason:
+                      description: A Reason for this condition's last transition from
+                        one status to another.
+                      type: string
+                    status:
+                      description: Status of this condition; is it currently True,
+                        False, or Unknown?
+                      type: string
+                    type:
+                      description: |-
+                        Type of this condition. At most one of each condition type may apply to
+                        a resource at any point in time.
+                      type: string
+                  required:
+                  - lastTransitionTime
+                  - reason
+                  - status
+                  - type
+                  type: object
+                type: array
+                x-kubernetes-list-map-keys:
+                - type
+                x-kubernetes-list-type: map
+              observedGeneration:
+                description: |-
+                  ObservedGeneration is the latest metadata.generation
+                  which resulted in either a ready state, or stalled due to error
+                  it can not recover from without human intervention.
+                format: int64
+                type: integer
+            type: object
+        required:
+        - spec
+        type: object
+    served: true
+    storage: true
+    subresources:
+      status: {}

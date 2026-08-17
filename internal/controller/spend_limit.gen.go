@@ -11,8 +11,8 @@ import (
 	"github.com/crossplane/crossplane-runtime/pkg/meta"
 	"github.com/crossplane/crossplane-runtime/pkg/reconciler/managed"
 	"github.com/crossplane/crossplane-runtime/pkg/resource"
-	pgbeam "github.com/pgbeam/pgbeam-go"
 	"github.com/pgbeam/provider-pgbeam/apis/v1alpha1"
+	pgbeam "go.pgbeam.com/sdk"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"time"
 )
@@ -155,15 +155,27 @@ func spendLimitObservation(o *pgbeam.OrganizationPlan) v1alpha1.SpendLimitAtProv
 	if o.CustomPricing != nil {
 		obs.CustomPricing = o.CustomPricing
 	}
+	if o.SpendCapped != nil {
+		obs.SpendCapped = o.SpendCapped
+	}
+	if o.SpendCappedAt != nil {
+		obs.SpendCappedAt = o.SpendCappedAt.Format(time.RFC3339)
+	}
 	obs.Limits = &v1alpha1.PlanLimitsObservation{
-		QueriesPerDay:    o.Limits.QueriesPerDay,
-		MaxProjects:      o.Limits.MaxProjects,
-		MaxDatabases:     o.Limits.MaxDatabases,
-		MaxConnections:   o.Limits.MaxConnections,
-		QueriesPerSecond: o.Limits.QueriesPerSecond,
-		BytesPerMonth:    o.Limits.BytesPerMonth,
-		MaxQueryShapes:   o.Limits.MaxQueryShapes,
-		IncludedSeats:    o.Limits.IncludedSeats,
+		QueriesPerDay:           o.Limits.QueriesPerDay,
+		MaxProjects:             o.Limits.MaxProjects,
+		MaxDatabases:            o.Limits.MaxDatabases,
+		MaxConnections:          o.Limits.MaxConnections,
+		QueriesPerSecond:        o.Limits.QueriesPerSecond,
+		BytesPerMonth:           o.Limits.BytesPerMonth,
+		MaxQueryShapes:          o.Limits.MaxQueryShapes,
+		IncludedSeats:           o.Limits.IncludedSeats,
+		MaxAgentCredentials:     o.Limits.MaxAgentCredentials,
+		AuditRetentionDays:      o.Limits.AuditRetentionDays,
+		SandboxMaxBranches:      o.Limits.SandboxMaxBranches,
+		SandboxMaxUpstreamBytes: o.Limits.SandboxMaxUpstreamBytes,
+		SandboxIdleSeconds:      o.Limits.SandboxIdleSeconds,
+		SandboxTTLSeconds:       o.Limits.SandboxTtlSeconds,
 	}
 	if o.CreatedAt != nil {
 		obs.CreatedAt = o.CreatedAt.Format(time.RFC3339)

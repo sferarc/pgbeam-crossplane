@@ -11,8 +11,8 @@ import (
 	"github.com/crossplane/crossplane-runtime/pkg/meta"
 	"github.com/crossplane/crossplane-runtime/pkg/reconciler/managed"
 	"github.com/crossplane/crossplane-runtime/pkg/resource"
-	pgbeam "github.com/pgbeam/pgbeam-go"
 	"github.com/pgbeam/provider-pgbeam/apis/v1alpha1"
+	pgbeam "go.pgbeam.com/sdk"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"time"
@@ -159,6 +159,9 @@ func (e *projectExternal) Create(ctx context.Context, mg resource.Managed) (mana
 		v := pgbeam.CreateProjectRequestCloud(fp.Cloud)
 		req.Cloud = &v
 	}
+	if fp.SelfHosted != nil {
+		req.SelfHosted = fp.SelfHosted
+	}
 	if fp.Database.PoolRegion != nil {
 		req.Database.PoolRegion = fp.Database.PoolRegion
 	}
@@ -195,11 +198,27 @@ func (e *projectExternal) Create(ctx context.Context, mg resource.Managed) (mana
 	updateReq := pgbeam.UpdateProjectRequest{}
 	needsPostCreateUpdate := false
 	if fp.AllowedCidrs != nil {
-		updateReq.AllowedCidrs = &fp.AllowedCidrs
+		allowedCidrsEntries := make([]pgbeam.CidrEntry, len(fp.AllowedCidrs))
+		for i, s := range fp.AllowedCidrs {
+			allowedCidrsEntries[i] = pgbeam.CidrEntry{
+				Cidr:  s.Cidr,
+				Label: s.Label,
+			}
+		}
+		updateReq.AllowedCidrs = &allowedCidrsEntries
 		needsPostCreateUpdate = true
 	}
 	if fp.DefaultPolicyProfileID != nil {
 		updateReq.DefaultPolicyProfileId = fp.DefaultPolicyProfileID
+		needsPostCreateUpdate = true
+	}
+	if fp.Residency != "" {
+		v := pgbeam.DataResidency(fp.Residency)
+		updateReq.Residency = &v
+		needsPostCreateUpdate = true
+	}
+	if fp.AgentsDisabled != nil {
+		updateReq.AgentsDisabled = fp.AgentsDisabled
 		needsPostCreateUpdate = true
 	}
 	if fp.Status != "" {
@@ -257,14 +276,32 @@ func (e *projectExternal) Update(ctx context.Context, mg resource.Managed) (mana
 		needsUpdate = true
 	}
 	if fp.AllowedCidrs != nil {
-		req.AllowedCidrs = &fp.AllowedCidrs
+		allowedCidrsEntries := make([]pgbeam.CidrEntry, len(fp.AllowedCidrs))
+		for i, s := range fp.AllowedCidrs {
+			allowedCidrsEntries[i] = pgbeam.CidrEntry{
+				Cidr:  s.Cidr,
+				Label: s.Label,
+			}
+		}
+		req.AllowedCidrs = &allowedCidrsEntries
 		needsUpdate = true
 	}
 	if fp.DefaultPolicyProfileID != nil && (project.DefaultPolicyProfileId == nil || *fp.DefaultPolicyProfileID != *project.DefaultPolicyProfileId) {
 		req.DefaultPolicyProfileId = fp.DefaultPolicyProfileID
 		needsUpdate = true
 	}
-	if fp.Status != "" && pgbeam.ProjectStatus(fp.Status) != project.Status {
+	if fp.Residency != "" {
+		v := pgbeam.DataResidency(fp.Residency)
+		if project.Residency == nil || string(v) != string(*project.Residency) {
+			req.Residency = &v
+			needsUpdate = true
+		}
+	}
+	if fp.AgentsDisabled != nil && (project.AgentsDisabled == nil || *fp.AgentsDisabled != *project.AgentsDisabled) {
+		req.AgentsDisabled = fp.AgentsDisabled
+		needsUpdate = true
+	}
+	if fp.Status != "" && fp.Status != string(project.Status) {
 		v := pgbeam.ProjectStatus(fp.Status)
 		req.Status = &v
 		needsUpdate = true
@@ -300,13 +337,13 @@ func projectObservation(p *pgbeam.Project) v1alpha1.ProjectAtProvider {
 		obs.ProxyHost = *p.ProxyHost
 	}
 	if p.QueriesPerSecond != nil {
-		obs.QueriesPerSecond = *p.QueriesPerSecond
+		obs.QueriesPerSecond = int(*p.QueriesPerSecond)
 	}
 	if p.BurstSize != nil {
-		obs.BurstSize = *p.BurstSize
+		obs.BurstSize = int(*p.BurstSize)
 	}
 	if p.MaxConnections != nil {
-		obs.MaxConnections = *p.MaxConnections
+		obs.MaxConnections = int(*p.MaxConnections)
 	}
 	if p.DatabaseCount != nil {
 		obs.DatabaseCount = *p.DatabaseCount
@@ -341,17 +378,19 @@ func isProjectUpToDate(fp v1alpha1.ProjectForProvider, p *pgbeam.Project) bool {
 		}
 	}
 	if fp.AllowedCidrs != nil {
-		pSlice := p.AllowedCidrs
-		if pSlice == nil {
+		pAllowedCidrs := p.AllowedCidrs
+		if pAllowedCidrs == nil {
 			if len(fp.AllowedCidrs) != 0 {
 				return false
 			}
+		} else if len(fp.AllowedCidrs) != len(*pAllowedCidrs) {
+			return false
 		} else {
-			if len(fp.AllowedCidrs) != len(*pSlice) {
-				return false
-			}
-			for i, t := range fp.AllowedCidrs {
-				if t != (*pSlice)[i] {
+			for i := range fp.AllowedCidrs {
+				if fp.AllowedCidrs[i].Cidr != (*pAllowedCidrs)[i].Cidr {
+					return false
+				}
+				if (fp.AllowedCidrs[i].Label == nil) != ((*pAllowedCidrs)[i].Label == nil) || (fp.AllowedCidrs[i].Label != nil && *fp.AllowedCidrs[i].Label != *(*pAllowedCidrs)[i].Label) {
 					return false
 				}
 			}
@@ -360,8 +399,17 @@ func isProjectUpToDate(fp v1alpha1.ProjectForProvider, p *pgbeam.Project) bool {
 	if fp.DefaultPolicyProfileID != nil && (p.DefaultPolicyProfileId == nil || *fp.DefaultPolicyProfileID != *p.DefaultPolicyProfileId) {
 		return false
 	}
+	if fp.Residency != "" {
+		v := pgbeam.DataResidency(fp.Residency)
+		if p.Residency == nil || string(v) != string(*p.Residency) {
+			return false
+		}
+	}
+	if fp.AgentsDisabled != nil && (p.AgentsDisabled == nil || *fp.AgentsDisabled != *p.AgentsDisabled) {
+		return false
+	}
 	if fp.Status != "" {
-		if pgbeam.ProjectStatus(fp.Status) != p.Status {
+		if fp.Status != string(p.Status) {
 			return false
 		}
 	}

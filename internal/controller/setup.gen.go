@@ -17,6 +17,10 @@ func Setup(mgr ctrl.Manager, o controller.Options) error {
 		SetupCustomDomain,
 		SetupCacheRule,
 		SetupSpendLimit,
+		SetupAgentCredential,
+		SetupPolicyProfile,
+		SetupWebhookEndpoint,
+		SetupSelfHostEnrollment,
 	} {
 		if err := setup(mgr, o); err != nil {
 			return err

@@ -11,8 +11,8 @@ import (
 	"github.com/crossplane/crossplane-runtime/pkg/meta"
 	"github.com/crossplane/crossplane-runtime/pkg/reconciler/managed"
 	"github.com/crossplane/crossplane-runtime/pkg/resource"
-	pgbeam "github.com/pgbeam/pgbeam-go"
 	"github.com/pgbeam/provider-pgbeam/apis/v1alpha1"
+	pgbeam "go.pgbeam.com/sdk"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"time"
 )
@@ -76,6 +76,14 @@ func (e *customDomainExternal) Observe(ctx context.Context, mg resource.Managed)
 			return managed.ExternalObservation{ResourceExists: false}, nil
 		}
 		return managed.ExternalObservation{}, fmt.Errorf("%s: %w", errCustomDomainObserve, err)
+	}
+
+	// While the custom domain is unverified, trigger a DNS re-check so it converges
+	// toward verified during reconciliation. Best-effort and idempotent.
+	if !customDomain.Verified {
+		if verifyResp, verr := e.client.Projects.VerifyCustomDomain(ctx, cr.Spec.ForProvider.ProjectID, externalName); verr == nil {
+			customDomain.Verified = verifyResp.Verified
+		}
 	}
 
 	cr.Status.AtProvider = v1alpha1.CustomDomainAtProvider{

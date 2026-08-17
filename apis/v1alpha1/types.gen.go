@@ -11,6 +11,18 @@ import (
 // Project
 // ============================================================================
 
+// CidrEntryParameters is one entry of ip filtering rules as cidr ranges with optional labels. when non-empty, only connections from matching ips are accepted. empty array means all ips are allowed (default). both ipv4 (e.g. 10.0.0.0/8) and ipv6 (e.g. 2001:db8::/32) are supported.
+type CidrEntryParameters struct {
+
+	// Cidr is the cidr range in ipv4 (e.g. 203.0.113.0/24) or ipv6 (e.g. 2001:db8::/32) notation. a plain ip without prefix length defaults to /32 (ipv4) or /128 (ipv6).
+	// +kubebuilder:validation:Required
+	Cidr string `json:"cidr"`
+
+	// Label is the optional human-readable label for this cidr entry (e.g. "office", "vpc").
+	// +optional
+	Label *string `json:"label,omitempty"`
+}
+
 // ProjectDatabaseSpec defines the request body for registering an upstream database.
 type ProjectDatabaseSpec struct {
 
@@ -157,13 +169,28 @@ type ProjectForProvider struct {
 	// +kubebuilder:validation:Enum=aws;azure;gcp
 	Cloud string `json:"cloud,omitempty"`
 
+	// SelfHosted is the when true, this project's data plane runs in the customer's own vpc/cluster (byoc): the control plane does not provision hosted infra, and a self-hosted proxy dials home over the config/audit grpc stream. requires the scale or enterprise plan.
+	// +immutable
+	// +optional
+	SelfHosted *bool `json:"selfHosted,omitempty"`
+
 	// AllowedCidrs is the ip filtering rules as cidr ranges with optional labels. when non-empty, only connections from matching ips are accepted. empty array means all ips are allowed (default). both ipv4 (e.g. 10.0.0.0/8) and ipv6 (e.g. 2001:db8::/32) are supported.
 	// +optional
-	AllowedCidrs []string `json:"allowedCidrs,omitempty"`
+	AllowedCidrs []CidrEntryParameters `json:"allowedCidrs,omitempty"`
 
 	// DefaultPolicyProfileID is the when set, passthrough/human connections are enforced against this policy profile.
 	// +optional
 	DefaultPolicyProfileID *string `json:"defaultPolicyProfileID,omitempty"`
+
+	// Residency is the data-residency requirement for the project. "any" (default) lets queries be served from the nearest data-plane metro. "us" or "eu" require the serving metro to be in that jurisdiction; the proxy fails a connection closed when it is served from a metro outside the required jurisdiction, so regulated workloads never process outside their permitted region.
+	// +optional
+	// +kubebuilder:validation:Enum=any;us;eu
+	// +kubebuilder:default=any
+	Residency string `json:"residency,omitempty"`
+
+	// AgentsDisabled is the project-level kill-switch. when true, all agent-credential connections to this project are blocked at the proxy and live agent sessions are dropped within seconds. passthrough/human connections are unaffected.
+	// +optional
+	AgentsDisabled *bool `json:"agentsDisabled,omitempty"`
 
 	// Status is the project lifecycle status.
 	// +optional
@@ -711,6 +738,24 @@ type PlanLimitsObservation struct {
 
 	// IncludedSeats is the number of seats included in the plan.
 	IncludedSeats int `json:"includedSeats,omitempty"`
+
+	// MaxAgentCredentials is the maximum agent credentials per organization. 0 means unlimited.
+	MaxAgentCredentials int `json:"maxAgentCredentials,omitempty"`
+
+	// AuditRetentionDays is the agent audit-log retention window in days.
+	AuditRetentionDays int `json:"auditRetentionDays,omitempty"`
+
+	// SandboxMaxBranches is the maximum concurrently active instant (sandbox) branches. 0 means no limit.
+	SandboxMaxBranches int `json:"sandboxMaxBranches,omitempty"`
+
+	// SandboxMaxUpstreamBytes is the maximum upstream source-database size a sandbox base sync accepts, in bytes. 0 means no limit.
+	SandboxMaxUpstreamBytes int64 `json:"sandboxMaxUpstreamBytes,omitempty"`
+
+	// SandboxIdleSeconds is the idle time before an instant (sandbox) branch scales to zero, in seconds.
+	SandboxIdleSeconds int `json:"sandboxIdleSeconds,omitempty"`
+
+	// SandboxTTLSeconds is the lifetime of an instant (sandbox) branch before the ttl sweep discards it, in seconds.
+	SandboxTTLSeconds int `json:"sandboxTTLSeconds,omitempty"`
 }
 
 // SpendLimitAtProvider defines the observed state of a SpendLimit.
@@ -738,6 +783,12 @@ type SpendLimitAtProvider struct {
 
 	// CustomPricing is the whether the organization has custom enterprise pricing.
 	CustomPricing *bool `json:"customPricing,omitempty"`
+
+	// SpendCapped is the whether the organization has hit its spend limit and agent access is paused at the proxy. lifts automatically when usage resets for the new billing period, or immediately when the spend limit is raised or removed.
+	SpendCapped *bool `json:"spendCapped,omitempty"`
+
+	// SpendCappedAt is the when the spend cap was applied. null when not capped.
+	SpendCappedAt string `json:"spendCappedAt,omitempty"`
 
 	// Limits is the effective usage limits enforced for an organization plan.
 	Limits *PlanLimitsObservation `json:"limits,omitempty"`
@@ -786,4 +837,471 @@ type SpendLimitList struct {
 	metav1.TypeMeta `json:",inline"`
 	metav1.ListMeta `json:"metadata,omitempty"`
 	Items           []SpendLimit `json:"items"`
+}
+
+// ============================================================================
+// AgentCredential
+// ============================================================================
+
+// AgentCredentialForProvider defines the desired state of a AgentCredential.
+type AgentCredentialForProvider struct {
+	// ProjectID is the owning project id.
+	// +kubebuilder:validation:Required
+	// +immutable
+	ProjectID string `json:"projectID"`
+
+	// PolicyProfileID is the policy profile enforced for this credential.
+	// +kubebuilder:validation:Required
+	// +immutable
+	PolicyProfileID string `json:"policyProfileID"`
+
+	// Name is the human-readable label for the credential.
+	// +kubebuilder:validation:Required
+	// +immutable
+	Name string `json:"name"`
+
+	// Status is the lifecycle status of the credential.
+	// +optional
+	// +kubebuilder:validation:Enum=active;disabled;revoked
+	Status string `json:"status,omitempty"`
+
+	// PrincipalType is the whether this credential represents an autonomous agent or a human operator.
+	// +immutable
+	// +optional
+	// +kubebuilder:validation:Enum=agent;human
+	// +kubebuilder:default=agent
+	PrincipalType string `json:"principalType,omitempty"`
+
+	// ExpiresAt is the when the credential expires and becomes unusable. null means it never expires. enforcement is fail-closed in the proxy the instant this time passes, before any cleanup sweep runs.
+	// +immutable
+	// +optional
+	ExpiresAt string `json:"expiresAt,omitempty"`
+}
+
+// AgentCredentialAtProvider defines the observed state of a AgentCredential.
+type AgentCredentialAtProvider struct {
+	// ID is the PgBeam agent credential ID.
+	ID string `json:"id,omitempty"`
+
+	// PgUsername is the the postgres username this credential presents to the proxy.
+	PgUsername string `json:"pgUsername,omitempty"`
+
+	// AuthMethod is the postgres auth method the proxy presents for this credential.
+	AuthMethod string `json:"authMethod,omitempty"`
+
+	// LastUsedAt is the when the credential was last used to connect, if ever.
+	LastUsedAt string `json:"lastUsedAt,omitempty"`
+
+	// CreatedAt is the when the credential was created.
+	CreatedAt string `json:"createdAt,omitempty"`
+
+	// UpdatedAt is the when the credential was last updated.
+	UpdatedAt string `json:"updatedAt,omitempty"`
+
+	// McpURL is the hosted agent-database mcp endpoint for this project. use with the mcp_token as a bearer token.
+	McpURL string `json:"mcpURL,omitempty"`
+}
+
+// AgentCredentialSpec defines the desired state of a AgentCredential.
+type AgentCredentialSpec struct {
+	xpv1.ResourceSpec `json:",inline"`
+	ForProvider       AgentCredentialForProvider `json:"forProvider"`
+}
+
+// AgentCredentialStatus defines the observed state of a AgentCredential.
+type AgentCredentialStatus struct {
+	xpv1.ResourceStatus `json:",inline"`
+	AtProvider          AgentCredentialAtProvider `json:"atProvider,omitempty"`
+}
+
+// +kubebuilder:object:root=true
+// +kubebuilder:subresource:status
+// +kubebuilder:resource:scope=Cluster,categories=crossplane;managed;pgbeam
+// +kubebuilder:printcolumn:name="READY",type="string",JSONPath=".status.conditions[?(@.type=='Ready')].status"
+// +kubebuilder:printcolumn:name="SYNCED",type="string",JSONPath=".status.conditions[?(@.type=='Synced')].status"
+// +kubebuilder:printcolumn:name="EXTERNAL-NAME",type="string",JSONPath=".metadata.annotations.crossplane\\.io/external-name"
+// +kubebuilder:printcolumn:name="AGE",type="date",JSONPath=".metadata.creationTimestamp"
+
+// AgentCredential is a managed resource that represents a PgBeam Agent Credential.
+type AgentCredential struct {
+	metav1.TypeMeta   `json:",inline"`
+	metav1.ObjectMeta `json:"metadata,omitempty"`
+
+	Spec   AgentCredentialSpec   `json:"spec"`
+	Status AgentCredentialStatus `json:"status,omitempty"`
+}
+
+// +kubebuilder:object:root=true
+
+// AgentCredentialList contains a list of AgentCredentials.
+type AgentCredentialList struct {
+	metav1.TypeMeta `json:",inline"`
+	metav1.ListMeta `json:"metadata,omitempty"`
+	Items           []AgentCredential `json:"items"`
+}
+
+// ============================================================================
+// PolicyProfile
+// ============================================================================
+
+// MaskingRuleParameters is one entry of column masking rules applied to query results.
+type MaskingRuleParameters struct {
+
+	// Table is the relation name, optionally schema-qualified (e.g. "public.users" or "users").
+	// +kubebuilder:validation:Required
+	Table string `json:"table"`
+
+	// Column is the column to mask.
+	// +kubebuilder:validation:Required
+	Column string `json:"column"`
+
+	// Kind is the how to mask. redact replaces with a token, null returns null, hash returns a sha-256 hex.
+	// +kubebuilder:validation:Required
+	// +kubebuilder:validation:Enum=redact;null;hash
+	Kind string `json:"kind"`
+}
+
+// RowFilterParameters is one entry of per-relation row filters anded into agent reads.
+type RowFilterParameters struct {
+
+	// Table is the relation name, optionally schema-qualified (e.g. "public.orders").
+	// +kubebuilder:validation:Required
+	Table string `json:"table"`
+
+	// Predicate is the raw sql boolean expression anded into where for this relation.
+	// +kubebuilder:validation:Required
+	Predicate string `json:"predicate"`
+}
+
+// StatementRulesSpec defines the per-statement-kind allow/deny lists. empty allow means all kinds permitted by the access mode.
+type StatementRulesSpec struct {
+
+	// Allow is the allowed statement kinds (select, insert, update, delete, ddl, copy, set, show, explain, transaction).
+	// +optional
+	Allow *[]string `json:"allow,omitempty"`
+
+	// Deny is the denied statement kinds (takes precedence over allow).
+	// +optional
+	Deny *[]string `json:"deny,omitempty"`
+}
+
+// PolicyProfileForProvider defines the desired state of a PolicyProfile.
+type PolicyProfileForProvider struct {
+	// ProjectID is the owning project id.
+	// +kubebuilder:validation:Required
+	// +immutable
+	ProjectID string `json:"projectID"`
+
+	// Name is the human-readable name for the policy profile.
+	// +kubebuilder:validation:Required
+	Name string `json:"name"`
+
+	// AccessMode is the read_only blocks all data and schema mutations.
+	// +optional
+	// +kubebuilder:validation:Enum=read_only;read_write
+	AccessMode string `json:"accessMode,omitempty"`
+
+	// StatementRules is the per-statement-kind allow/deny lists. empty allow means all kinds permitted by the access mode.
+	// +optional
+	StatementRules *StatementRulesSpec `json:"statementRules,omitempty"`
+
+	// TableAllowlist is the if non-empty, only these relations are reachable. entries are schema-qualified (billing.orders) or bare (orders); a bare entry grants the public schema only, so the same table name in another schema must be listed in full.
+	// +optional
+	TableAllowlist []string `json:"tableAllowlist,omitempty"`
+
+	// TableDenylist is the relations explicitly blocked (takes precedence over the allowlist). a bare entry blocks that relation in every schema.
+	// +optional
+	TableDenylist []string `json:"tableDenylist,omitempty"`
+
+	// MaskingRules is the column masking rules applied to query results.
+	// +optional
+	MaskingRules []MaskingRuleParameters `json:"maskingRules,omitempty"`
+
+	// BudgetQueriesPerHour is the max queries per rolling hour window. 0 means unlimited.
+	// +optional
+	// +kubebuilder:default=0
+	BudgetQueriesPerHour *int `json:"budgetQueriesPerHour,omitempty"`
+
+	// BudgetQueriesPerDay is the max queries per day window. 0 means unlimited.
+	// +optional
+	// +kubebuilder:default=0
+	BudgetQueriesPerDay *int `json:"budgetQueriesPerDay,omitempty"`
+
+	// MaxRows is the max rows returned per query. 0 means unlimited.
+	// +optional
+	// +kubebuilder:default=0
+	MaxRows *int `json:"maxRows,omitempty"`
+
+	// StatementTimeoutMs is the upstream statement timeout for agent sessions. 0 uses the project default.
+	// +optional
+	// +kubebuilder:default=0
+	StatementTimeoutMs *int `json:"statementTimeoutMs,omitempty"`
+
+	// RowFilters is the per-relation row filters anded into agent reads.
+	// +optional
+	RowFilters []RowFilterParameters `json:"rowFilters,omitempty"`
+
+	// WriteMode is the how writes are handled. normal commits, rollback auto-rolls back, sandbox routes to an ephemeral branch.
+	// +optional
+	// +kubebuilder:validation:Enum=normal;rollback;sandbox
+	// +kubebuilder:default=normal
+	WriteMode string `json:"writeMode,omitempty"`
+
+	// ApprovalMode is the which statement classes require human approval before execution.
+	// +optional
+	// +kubebuilder:validation:Enum=off;writes;ddl;all
+	// +kubebuilder:default=off
+	ApprovalMode string `json:"approvalMode,omitempty"`
+
+	// ApprovalAutoMaxRows is the statements touching at most this many rows are auto-approved. 0 means none.
+	// +optional
+	// +kubebuilder:default=0
+	// +kubebuilder:validation:Minimum=0
+	ApprovalAutoMaxRows *int `json:"approvalAutoMaxRows,omitempty"`
+
+	// ApprovalTimeoutSeconds is the how long a held statement waits for a decision before expiring.
+	// +optional
+	// +kubebuilder:default=300
+	// +kubebuilder:validation:Minimum=0
+	ApprovalTimeoutSeconds *int `json:"approvalTimeoutSeconds,omitempty"`
+
+	// MigrationSafety is the migration safety mode. warn surfaces findings, block refuses unsafe ddl.
+	// +optional
+	// +kubebuilder:validation:Enum=off;warn;block
+	// +kubebuilder:default=off
+	MigrationSafety string `json:"migrationSafety,omitempty"`
+
+	// EgressBytesPerDay is the per-day egress budget in bytes. 0 means unlimited.
+	// +optional
+	// +kubebuilder:default=0
+	// +kubebuilder:validation:Minimum=0
+	EgressBytesPerDay *int64 `json:"egressBytesPerDay,omitempty"`
+
+	// MaxAffectedRows is the hard cap on rows a single write (insert/update/delete) may affect. a write whose affected-row count would exceed this is executed inside a transaction, checked, and rolled back so nothing persists, then blocked. enforced independently of human approval. 0 means unlimited.
+	// +optional
+	// +kubebuilder:default=0
+	// +kubebuilder:validation:Minimum=0
+	MaxAffectedRows *int `json:"maxAffectedRows,omitempty"`
+}
+
+// PolicyProfileAtProvider defines the observed state of a PolicyProfile.
+type PolicyProfileAtProvider struct {
+	// ID is the PgBeam policy profile ID.
+	ID string `json:"id,omitempty"`
+
+	// CreatedAt is the when the policy profile was created.
+	CreatedAt string `json:"createdAt,omitempty"`
+
+	// UpdatedAt is the when the policy profile was last updated.
+	UpdatedAt string `json:"updatedAt,omitempty"`
+}
+
+// PolicyProfileSpec defines the desired state of a PolicyProfile.
+type PolicyProfileSpec struct {
+	xpv1.ResourceSpec `json:",inline"`
+	ForProvider       PolicyProfileForProvider `json:"forProvider"`
+}
+
+// PolicyProfileStatus defines the observed state of a PolicyProfile.
+type PolicyProfileStatus struct {
+	xpv1.ResourceStatus `json:",inline"`
+	AtProvider          PolicyProfileAtProvider `json:"atProvider,omitempty"`
+}
+
+// +kubebuilder:object:root=true
+// +kubebuilder:subresource:status
+// +kubebuilder:resource:scope=Cluster,categories=crossplane;managed;pgbeam
+// +kubebuilder:printcolumn:name="READY",type="string",JSONPath=".status.conditions[?(@.type=='Ready')].status"
+// +kubebuilder:printcolumn:name="SYNCED",type="string",JSONPath=".status.conditions[?(@.type=='Synced')].status"
+// +kubebuilder:printcolumn:name="EXTERNAL-NAME",type="string",JSONPath=".metadata.annotations.crossplane\\.io/external-name"
+// +kubebuilder:printcolumn:name="AGE",type="date",JSONPath=".metadata.creationTimestamp"
+
+// PolicyProfile is a managed resource that represents a PgBeam Policy Profile.
+type PolicyProfile struct {
+	metav1.TypeMeta   `json:",inline"`
+	metav1.ObjectMeta `json:"metadata,omitempty"`
+
+	Spec   PolicyProfileSpec   `json:"spec"`
+	Status PolicyProfileStatus `json:"status,omitempty"`
+}
+
+// +kubebuilder:object:root=true
+
+// PolicyProfileList contains a list of PolicyProfiles.
+type PolicyProfileList struct {
+	metav1.TypeMeta `json:",inline"`
+	metav1.ListMeta `json:"metadata,omitempty"`
+	Items           []PolicyProfile `json:"items"`
+}
+
+// ============================================================================
+// WebhookEndpoint
+// ============================================================================
+
+// WebhookEndpointForProvider defines the desired state of a WebhookEndpoint.
+type WebhookEndpointForProvider struct {
+	// ProjectID is the owning project id.
+	// +kubebuilder:validation:Required
+	// +immutable
+	ProjectID string `json:"projectID"`
+
+	// URL is the https endpoint that receives event deliveries.
+	// +kubebuilder:validation:Required
+	URL string `json:"url"`
+
+	// Format is the payload format for delivered events.
+	// +optional
+	// +kubebuilder:validation:Enum=json;splunk_hec;datadog;elastic
+	Format string `json:"format,omitempty"`
+
+	// EventTypes is the event types to deliver. empty means all events.
+	// +optional
+	EventTypes []string `json:"eventTypes,omitempty"`
+
+	// Enabled is the whether deliveries are active for this endpoint.
+	// +optional
+	Enabled *bool `json:"enabled,omitempty"`
+
+	// Description is the human-readable label for the endpoint.
+	// +optional
+	Description *string `json:"description,omitempty"`
+
+	// SecretSecretRef is the shared secret used to sign delivery payloads. write-only.
+	// +optional
+	// +kubebuilder:validation:Required
+	SecretSecretRef xpv1.SecretKeySelector `json:"secretSecretRef"`
+}
+
+// WebhookEndpointAtProvider defines the observed state of a WebhookEndpoint.
+type WebhookEndpointAtProvider struct {
+	// ID is the PgBeam webhook endpoint ID.
+	ID string `json:"id,omitempty"`
+
+	// CreatedAt is the when the endpoint was created.
+	CreatedAt string `json:"createdAt,omitempty"`
+
+	// UpdatedAt is the when the endpoint was last updated.
+	UpdatedAt string `json:"updatedAt,omitempty"`
+}
+
+// WebhookEndpointSpec defines the desired state of a WebhookEndpoint.
+type WebhookEndpointSpec struct {
+	xpv1.ResourceSpec `json:",inline"`
+	ForProvider       WebhookEndpointForProvider `json:"forProvider"`
+}
+
+// WebhookEndpointStatus defines the observed state of a WebhookEndpoint.
+type WebhookEndpointStatus struct {
+	xpv1.ResourceStatus `json:",inline"`
+	AtProvider          WebhookEndpointAtProvider `json:"atProvider,omitempty"`
+}
+
+// +kubebuilder:object:root=true
+// +kubebuilder:subresource:status
+// +kubebuilder:resource:scope=Cluster,categories=crossplane;managed;pgbeam
+// +kubebuilder:printcolumn:name="READY",type="string",JSONPath=".status.conditions[?(@.type=='Ready')].status"
+// +kubebuilder:printcolumn:name="SYNCED",type="string",JSONPath=".status.conditions[?(@.type=='Synced')].status"
+// +kubebuilder:printcolumn:name="EXTERNAL-NAME",type="string",JSONPath=".metadata.annotations.crossplane\\.io/external-name"
+// +kubebuilder:printcolumn:name="AGE",type="date",JSONPath=".metadata.creationTimestamp"
+
+// WebhookEndpoint is a managed resource that represents a PgBeam Webhook Endpoint.
+type WebhookEndpoint struct {
+	metav1.TypeMeta   `json:",inline"`
+	metav1.ObjectMeta `json:"metadata,omitempty"`
+
+	Spec   WebhookEndpointSpec   `json:"spec"`
+	Status WebhookEndpointStatus `json:"status,omitempty"`
+}
+
+// +kubebuilder:object:root=true
+
+// WebhookEndpointList contains a list of WebhookEndpoints.
+type WebhookEndpointList struct {
+	metav1.TypeMeta `json:",inline"`
+	metav1.ListMeta `json:"metadata,omitempty"`
+	Items           []WebhookEndpoint `json:"items"`
+}
+
+// ============================================================================
+// SelfHostEnrollment
+// ============================================================================
+
+// SelfHostEnrollmentForProvider defines the desired state of a SelfHostEnrollment.
+type SelfHostEnrollmentForProvider struct {
+	// OrgID is the organization that owns this enrollment.
+	// +kubebuilder:validation:Required
+	// +immutable
+	OrgID string `json:"orgID"`
+
+	// RegionLabel is the operator-supplied label for where the proxy runs (informational).
+	// +immutable
+	// +optional
+	RegionLabel *string `json:"regionLabel,omitempty"`
+
+	// Description is the optional human-readable note.
+	// +immutable
+	// +optional
+	Description *string `json:"description,omitempty"`
+
+	// ExpiresAt is the when the enrollment token expires and stops authenticating new proxy connections. null means it never expires. enforcement is fail-closed at the grpc auth gate the instant this time passes.
+	// +immutable
+	// +optional
+	ExpiresAt string `json:"expiresAt,omitempty"`
+}
+
+// SelfHostEnrollmentAtProvider defines the observed state of a SelfHostEnrollment.
+type SelfHostEnrollmentAtProvider struct {
+	// ID is the PgBeam self host enrollment ID.
+	ID string `json:"id,omitempty"`
+
+	// CreatedBy is the user id that created the enrollment.
+	CreatedBy string `json:"createdBy,omitempty"`
+
+	// CreatedAt is the when the enrollment was created.
+	CreatedAt string `json:"createdAt,omitempty"`
+
+	// LastSeenAt is the last time a proxy authenticated with this enrollment.
+	LastSeenAt string `json:"lastSeenAt,omitempty"`
+
+	// RevokedAt is the when the enrollment was revoked. null means active.
+	RevokedAt string `json:"revokedAt,omitempty"`
+}
+
+// SelfHostEnrollmentSpec defines the desired state of a SelfHostEnrollment.
+type SelfHostEnrollmentSpec struct {
+	xpv1.ResourceSpec `json:",inline"`
+	ForProvider       SelfHostEnrollmentForProvider `json:"forProvider"`
+}
+
+// SelfHostEnrollmentStatus defines the observed state of a SelfHostEnrollment.
+type SelfHostEnrollmentStatus struct {
+	xpv1.ResourceStatus `json:",inline"`
+	AtProvider          SelfHostEnrollmentAtProvider `json:"atProvider,omitempty"`
+}
+
+// +kubebuilder:object:root=true
+// +kubebuilder:subresource:status
+// +kubebuilder:resource:scope=Cluster,categories=crossplane;managed;pgbeam
+// +kubebuilder:printcolumn:name="READY",type="string",JSONPath=".status.conditions[?(@.type=='Ready')].status"
+// +kubebuilder:printcolumn:name="SYNCED",type="string",JSONPath=".status.conditions[?(@.type=='Synced')].status"
+// +kubebuilder:printcolumn:name="EXTERNAL-NAME",type="string",JSONPath=".metadata.annotations.crossplane\\.io/external-name"
+// +kubebuilder:printcolumn:name="AGE",type="date",JSONPath=".metadata.creationTimestamp"
+
+// SelfHostEnrollment is a managed resource that represents a PgBeam Self Host Enrollment.
+// All fields are immutable; any change triggers recreation.
+type SelfHostEnrollment struct {
+	metav1.TypeMeta   `json:",inline"`
+	metav1.ObjectMeta `json:"metadata,omitempty"`
+
+	Spec   SelfHostEnrollmentSpec   `json:"spec"`
+	Status SelfHostEnrollmentStatus `json:"status,omitempty"`
+}
+
+// +kubebuilder:object:root=true
+
+// SelfHostEnrollmentList contains a list of SelfHostEnrollments.
+type SelfHostEnrollmentList struct {
+	metav1.TypeMeta `json:",inline"`
+	metav1.ListMeta `json:"metadata,omitempty"`
+	Items           []SelfHostEnrollment `json:"items"`
 }

@@ -11,8 +11,8 @@ import (
 	"github.com/crossplane/crossplane-runtime/pkg/meta"
 	"github.com/crossplane/crossplane-runtime/pkg/reconciler/managed"
 	"github.com/crossplane/crossplane-runtime/pkg/resource"
-	pgbeam "github.com/pgbeam/pgbeam-go"
 	"github.com/pgbeam/provider-pgbeam/apis/v1alpha1"
+	pgbeam "go.pgbeam.com/sdk"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"time"
 )

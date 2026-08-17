@@ -1,0 +1,20 @@
+# Crossplane package metadata. Combined with the CRDs under package/crds/ by
+# `crossplane xpkg build` to produce the provider OCI package pushed to
+# ghcr.io/sferarc/provider-pgbeam. The controller.image is replaced at build
+# time with the published controller image + tag.
+apiVersion: meta.pkg.crossplane.io/v1
+kind: Provider
+metadata:
+  name: provider-pgbeam
+  annotations:
+    meta.crossplane.io/maintainer: PgBeam <support@pgbeam.com>
+    meta.crossplane.io/source: github.com/sferarc/pgbeam-crossplane
+    meta.crossplane.io/license: Apache-2.0
+    meta.crossplane.io/description: |
+      Crossplane provider for PgBeam — manage projects, databases, replicas,
+      custom domains, cache rules, and spend limits as Kubernetes resources.
+spec:
+  crossplane:
+    version: ">=v1.14.0"
+  controller:
+    image: ghcr.io/sferarc/provider-pgbeam-controller:latest

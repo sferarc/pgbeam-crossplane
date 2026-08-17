@@ -32,6 +32,10 @@ func init() {
 		&CustomDomain{}, &CustomDomainList{},
 		&CacheRule{}, &CacheRuleList{},
 		&SpendLimit{}, &SpendLimitList{},
+		&AgentCredential{}, &AgentCredentialList{},
+		&PolicyProfile{}, &PolicyProfileList{},
+		&WebhookEndpoint{}, &WebhookEndpointList{},
+		&SelfHostEnrollment{}, &SelfHostEnrollmentList{},
 		&ProviderConfig{}, &ProviderConfigList{},
 		&ProviderConfigUsage{}, &ProviderConfigUsageList{},
 	)
@@ -83,4 +87,36 @@ var (
 	SpendLimitGroupKind        = schema.GroupKind{Group: Group, Kind: SpendLimitKind}.String()
 	SpendLimitKindAPIVersion   = SpendLimitKind + "." + SchemeGroupVersion.String()
 	SpendLimitGroupVersionKind = SchemeGroupVersion.WithKind(SpendLimitKind)
+)
+
+// AgentCredential type metadata.
+var (
+	AgentCredentialKind             = reflect.TypeOf(AgentCredential{}).Name()
+	AgentCredentialGroupKind        = schema.GroupKind{Group: Group, Kind: AgentCredentialKind}.String()
+	AgentCredentialKindAPIVersion   = AgentCredentialKind + "." + SchemeGroupVersion.String()
+	AgentCredentialGroupVersionKind = SchemeGroupVersion.WithKind(AgentCredentialKind)
+)
+
+// PolicyProfile type metadata.
+var (
+	PolicyProfileKind             = reflect.TypeOf(PolicyProfile{}).Name()
+	PolicyProfileGroupKind        = schema.GroupKind{Group: Group, Kind: PolicyProfileKind}.String()
+	PolicyProfileKindAPIVersion   = PolicyProfileKind + "." + SchemeGroupVersion.String()
+	PolicyProfileGroupVersionKind = SchemeGroupVersion.WithKind(PolicyProfileKind)
+)
+
+// WebhookEndpoint type metadata.
+var (
+	WebhookEndpointKind             = reflect.TypeOf(WebhookEndpoint{}).Name()
+	WebhookEndpointGroupKind        = schema.GroupKind{Group: Group, Kind: WebhookEndpointKind}.String()
+	WebhookEndpointKindAPIVersion   = WebhookEndpointKind + "." + SchemeGroupVersion.String()
+	WebhookEndpointGroupVersionKind = SchemeGroupVersion.WithKind(WebhookEndpointKind)
+)
+
+// SelfHostEnrollment type metadata.
+var (
+	SelfHostEnrollmentKind             = reflect.TypeOf(SelfHostEnrollment{}).Name()
+	SelfHostEnrollmentGroupKind        = schema.GroupKind{Group: Group, Kind: SelfHostEnrollmentKind}.String()
+	SelfHostEnrollmentKindAPIVersion   = SelfHostEnrollmentKind + "." + SchemeGroupVersion.String()
+	SelfHostEnrollmentGroupVersionKind = SchemeGroupVersion.WithKind(SelfHostEnrollmentKind)
 )

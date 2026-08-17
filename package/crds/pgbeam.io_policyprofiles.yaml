@@ -1,0 +1,496 @@
+---
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  annotations:
+    controller-gen.kubebuilder.io/version: v0.16.0
+  name: policyprofiles.pgbeam.io
+spec:
+  group: pgbeam.io
+  names:
+    categories:
+    - crossplane
+    - managed
+    - pgbeam
+    kind: PolicyProfile
+    listKind: PolicyProfileList
+    plural: policyprofiles
+    singular: policyprofile
+  scope: Cluster
+  versions:
+  - additionalPrinterColumns:
+    - jsonPath: .status.conditions[?(@.type=='Ready')].status
+      name: READY
+      type: string
+    - jsonPath: .status.conditions[?(@.type=='Synced')].status
+      name: SYNCED
+      type: string
+    - jsonPath: .metadata.annotations.crossplane\.io/external-name
+      name: EXTERNAL-NAME
+      type: string
+    - jsonPath: .metadata.creationTimestamp
+      name: AGE
+      type: date
+    name: v1alpha1
+    schema:
+      openAPIV3Schema:
+        description: PolicyProfile is a managed resource that represents a PgBeam
+          Policy Profile.
+        properties:
+          apiVersion:
+            description: |-
+              APIVersion defines the versioned schema of this representation of an object.
+              Servers should convert recognized schemas to the latest internal value, and
+              may reject unrecognized values.
+              More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources
+            type: string
+          kind:
+            description: |-
+              Kind is a string value representing the REST resource this object represents.
+              Servers may infer this from the endpoint the client submits requests to.
+              Cannot be updated.
+              In CamelCase.
+              More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds
+            type: string
+          metadata:
+            type: object
+          spec:
+            description: PolicyProfileSpec defines the desired state of a PolicyProfile.
+            properties:
+              deletionPolicy:
+                default: Delete
+                description: |-
+                  DeletionPolicy specifies what will happen to the underlying external
+                  when this managed resource is deleted - either "Delete" or "Orphan" the
+                  external resource.
+                  This field is planned to be deprecated in favor of the ManagementPolicies
+                  field in a future release. Currently, both could be set independently and
+                  non-default values would be honored if the feature flag is enabled.
+                  See the design doc for more information: https://github.com/crossplane/crossplane/blob/499895a25d1a1a0ba1604944ef98ac7a1a71f197/design/design-doc-observe-only-resources.md?plain=1#L223
+                enum:
+                - Orphan
+                - Delete
+                type: string
+              forProvider:
+                description: PolicyProfileForProvider defines the desired state of
+                  a PolicyProfile.
+                properties:
+                  accessMode:
+                    description: AccessMode is the read_only blocks all data and schema
+                      mutations.
+                    enum:
+                    - read_only
+                    - read_write
+                    type: string
+                  approvalAutoMaxRows:
+                    default: 0
+                    description: ApprovalAutoMaxRows is the statements touching at
+                      most this many rows are auto-approved. 0 means none.
+                    minimum: 0
+                    type: integer
+                  approvalMode:
+                    default: "off"
+                    description: ApprovalMode is the which statement classes require
+                      human approval before execution.
+                    enum:
+                    - "off"
+                    - writes
+                    - ddl
+                    - all
+                    type: string
+                  approvalTimeoutSeconds:
+                    default: 300
+                    description: ApprovalTimeoutSeconds is the how long a held statement
+                      waits for a decision before expiring.
+                    minimum: 0
+                    type: integer
+                  budgetQueriesPerDay:
+                    default: 0
+                    description: BudgetQueriesPerDay is the max queries per day window.
+                      0 means unlimited.
+                    type: integer
+                  budgetQueriesPerHour:
+                    default: 0
+                    description: BudgetQueriesPerHour is the max queries per rolling
+                      hour window. 0 means unlimited.
+                    type: integer
+                  egressBytesPerDay:
+                    default: 0
+                    description: EgressBytesPerDay is the per-day egress budget in
+                      bytes. 0 means unlimited.
+                    format: int64
+                    minimum: 0
+                    type: integer
+                  maskingRules:
+                    description: MaskingRules is the column masking rules applied
+                      to query results.
+                    items:
+                      description: MaskingRuleParameters is one entry of column masking
+                        rules applied to query results.
+                      properties:
+                        column:
+                          description: Column is the column to mask.
+                          type: string
+                        kind:
+                          description: Kind is the how to mask. redact replaces with
+                            a token, null returns null, hash returns a sha-256 hex.
+                          enum:
+                          - redact
+                          - "null"
+                          - hash
+                          type: string
+                        table:
+                          description: Table is the relation name, optionally schema-qualified
+                            (e.g. "public.users" or "users").
+                          type: string
+                      required:
+                      - column
+                      - kind
+                      - table
+                      type: object
+                    type: array
+                  maxAffectedRows:
+                    default: 0
+                    description: MaxAffectedRows is the hard cap on rows a single
+                      write (insert/update/delete) may affect. a write whose affected-row
+                      count would exceed this is executed inside a transaction, checked,
+                      and rolled back so nothing persists, then blocked. enforced
+                      independently of human approval. 0 means unlimited.
+                    minimum: 0
+                    type: integer
+                  maxRows:
+                    default: 0
+                    description: MaxRows is the max rows returned per query. 0 means
+                      unlimited.
+                    type: integer
+                  migrationSafety:
+                    default: "off"
+                    description: MigrationSafety is the migration safety mode. warn
+                      surfaces findings, block refuses unsafe ddl.
+                    enum:
+                    - "off"
+                    - warn
+                    - block
+                    type: string
+                  name:
+                    description: Name is the human-readable name for the policy profile.
+                    type: string
+                  projectID:
+                    description: ProjectID is the owning project id.
+                    type: string
+                  rowFilters:
+                    description: RowFilters is the per-relation row filters anded
+                      into agent reads.
+                    items:
+                      description: RowFilterParameters is one entry of per-relation
+                        row filters anded into agent reads.
+                      properties:
+                        predicate:
+                          description: Predicate is the raw sql boolean expression
+                            anded into where for this relation.
+                          type: string
+                        table:
+                          description: Table is the relation name, optionally schema-qualified
+                            (e.g. "public.orders").
+                          type: string
+                      required:
+                      - predicate
+                      - table
+                      type: object
+                    type: array
+                  statementRules:
+                    description: StatementRules is the per-statement-kind allow/deny
+                      lists. empty allow means all kinds permitted by the access mode.
+                    properties:
+                      allow:
+                        description: Allow is the allowed statement kinds (select,
+                          insert, update, delete, ddl, copy, set, show, explain, transaction).
+                        items:
+                          type: string
+                        type: array
+                      deny:
+                        description: Deny is the denied statement kinds (takes precedence
+                          over allow).
+                        items:
+                          type: string
+                        type: array
+                    type: object
+                  statementTimeoutMs:
+                    default: 0
+                    description: StatementTimeoutMs is the upstream statement timeout
+                      for agent sessions. 0 uses the project default.
+                    type: integer
+                  tableAllowlist:
+                    description: TableAllowlist is the if non-empty, only these relations
+                      are reachable. entries are schema-qualified (billing.orders)
+                      or bare (orders); a bare entry grants the public schema only,
+                      so the same table name in another schema must be listed in full.
+                    items:
+                      type: string
+                    type: array
+                  tableDenylist:
+                    description: TableDenylist is the relations explicitly blocked
+                      (takes precedence over the allowlist). a bare entry blocks that
+                      relation in every schema.
+                    items:
+                      type: string
+                    type: array
+                  writeMode:
+                    default: normal
+                    description: WriteMode is the how writes are handled. normal commits,
+                      rollback auto-rolls back, sandbox routes to an ephemeral branch.
+                    enum:
+                    - normal
+                    - rollback
+                    - sandbox
+                    type: string
+                required:
+                - name
+                - projectID
+                type: object
+              managementPolicies:
+                default:
+                - '*'
+                description: |-
+                  THIS IS A BETA FIELD. It is on by default but can be opted out
+                  through a Crossplane feature flag.
+                  ManagementPolicies specify the array of actions Crossplane is allowed to
+                  take on the managed and external resources.
+                  This field is planned to replace the DeletionPolicy field in a future
+                  release. Currently, both could be set independently and non-default
+                  values would be honored if the feature flag is enabled. If both are
+                  custom, the DeletionPolicy field will be ignored.
+                  See the design doc for more information: https://github.com/crossplane/crossplane/blob/499895a25d1a1a0ba1604944ef98ac7a1a71f197/design/design-doc-observe-only-resources.md?plain=1#L223
+                  and this one: https://github.com/crossplane/crossplane/blob/444267e84783136daa93568b364a5f01228cacbe/design/one-pager-ignore-changes.md
+                items:
+                  description: |-
+                    A ManagementAction represents an action that the Crossplane controllers
+                    can take on an external resource.
+                  enum:
+                  - Observe
+                  - Create
+                  - Update
+                  - Delete
+                  - LateInitialize
+                  - '*'
+                  type: string
+                type: array
+              providerConfigRef:
+                default:
+                  name: default
+                description: |-
+                  ProviderConfigReference specifies how the provider that will be used to
+                  create, observe, update, and delete this managed resource should be
+                  configured.
+                properties:
+                  name:
+                    description: Name of the referenced object.
+                    type: string
+                  policy:
+                    description: Policies for referencing.
+                    properties:
+                      resolution:
+                        default: Required
+                        description: |-
+                          Resolution specifies whether resolution of this reference is required.
+                          The default is 'Required', which means the reconcile will fail if the
+                          reference cannot be resolved. 'Optional' means this reference will be
+                          a no-op if it cannot be resolved.
+                        enum:
+                        - Required
+                        - Optional
+                        type: string
+                      resolve:
+                        description: |-
+                          Resolve specifies when this reference should be resolved. The default
+                          is 'IfNotPresent', which will attempt to resolve the reference only when
+                          the corresponding field is not present. Use 'Always' to resolve the
+                          reference on every reconcile.
+                        enum:
+                        - Always
+                        - IfNotPresent
+                        type: string
+                    type: object
+                required:
+                - name
+                type: object
+              publishConnectionDetailsTo:
+                description: |-
+                  PublishConnectionDetailsTo specifies the connection secret config which
+                  contains a name, metadata and a reference to secret store config to
+                  which any connection details for this managed resource should be written.
+                  Connection details frequently include the endpoint, username,
+                  and password required to connect to the managed resource.
+                properties:
+                  configRef:
+                    default:
+                      name: default
+                    description: |-
+                      SecretStoreConfigRef specifies which secret store config should be used
+                      for this ConnectionSecret.
+                    properties:
+                      name:
+                        description: Name of the referenced object.
+                        type: string
+                      policy:
+                        description: Policies for referencing.
+                        properties:
+                          resolution:
+                            default: Required
+                            description: |-
+                              Resolution specifies whether resolution of this reference is required.
+                              The default is 'Required', which means the reconcile will fail if the
+                              reference cannot be resolved. 'Optional' means this reference will be
+                              a no-op if it cannot be resolved.
+                            enum:
+                            - Required
+                            - Optional
+                            type: string
+                          resolve:
+                            description: |-
+                              Resolve specifies when this reference should be resolved. The default
+                              is 'IfNotPresent', which will attempt to resolve the reference only when
+                              the corresponding field is not present. Use 'Always' to resolve the
+                              reference on every reconcile.
+                            enum:
+                            - Always
+                            - IfNotPresent
+                            type: string
+                        type: object
+                    required:
+                    - name
+                    type: object
+                  metadata:
+                    description: Metadata is the metadata for connection secret.
+                    properties:
+                      annotations:
+                        additionalProperties:
+                          type: string
+                        description: |-
+                          Annotations are the annotations to be added to connection secret.
+                          - For Kubernetes secrets, this will be used as "metadata.annotations".
+                          - It is up to Secret Store implementation for others store types.
+                        type: object
+                      labels:
+                        additionalProperties:
+                          type: string
+                        description: |-
+                          Labels are the labels/tags to be added to connection secret.
+                          - For Kubernetes secrets, this will be used as "metadata.labels".
+                          - It is up to Secret Store implementation for others store types.
+                        type: object
+                      type:
+                        description: |-
+                          Type is the SecretType for the connection secret.
+                          - Only valid for Kubernetes Secret Stores.
+                        type: string
+                    type: object
+                  name:
+                    description: Name is the name of the connection secret.
+                    type: string
+                required:
+                - name
+                type: object
+              writeConnectionSecretToRef:
+                description: |-
+                  WriteConnectionSecretToReference specifies the namespace and name of a
+                  Secret to which any connection details for this managed resource should
+                  be written. Connection details frequently include the endpoint, username,
+                  and password required to connect to the managed resource.
+                  This field is planned to be replaced in a future release in favor of
+                  PublishConnectionDetailsTo. Currently, both could be set independently
+                  and connection details would be published to both without affecting
+                  each other.
+                properties:
+                  name:
+                    description: Name of the secret.
+                    type: string
+                  namespace:
+                    description: Namespace of the secret.
+                    type: string
+                required:
+                - name
+                - namespace
+                type: object
+            required:
+            - forProvider
+            type: object
+          status:
+            description: PolicyProfileStatus defines the observed state of a PolicyProfile.
+            properties:
+              atProvider:
+                description: PolicyProfileAtProvider defines the observed state of
+                  a PolicyProfile.
+                properties:
+                  createdAt:
+                    description: CreatedAt is the when the policy profile was created.
+                    type: string
+                  id:
+                    description: ID is the PgBeam policy profile ID.
+                    type: string
+                  updatedAt:
+                    description: UpdatedAt is the when the policy profile was last
+                      updated.
+                    type: string
+                type: object
+              conditions:
+                description: Conditions of the resource.
+                items:
+                  description: A Condition that may apply to a resource.
+                  properties:
+                    lastTransitionTime:
+                      description: |-
+                        LastTransitionTime is the last time this condition transitioned from one
+                        status to another.
+                      format: date-time
+                      type: string
+                    message:
+                      description: |-
+                        A Message containing details about this condition's last transition from
+                        one status to another, if any.
+                      type: string
+                    observedGeneration:
+                      description: |-
+                        ObservedGeneration represents the .metadata.generation that the condition was set based upon.
+                        For instance, if .metadata.generation is currently 12, but the .status.conditions[x].observedGeneration is 9, the condition is out of date
+                        with respect to the current state of the instance.
+                      format: int64
+                      type: integer
+                    reason:
+                      description: A Reason for this condition's last transition from
+                        one status to another.
+                      type: string
+                    status:
+                      description: Status of this condition; is it currently True,
+                        False, or Unknown?
+                      type: string
+                    type:
+                      description: |-
+                        Type of this condition. At most one of each condition type may apply to
+                        a resource at any point in time.
+                      type: string
+                  required:
+                  - lastTransitionTime
+                  - reason
+                  - status
+                  - type
+                  type: object
+                type: array
+                x-kubernetes-list-map-keys:
+                - type
+                x-kubernetes-list-type: map
+              observedGeneration:
+                description: |-
+                  ObservedGeneration is the latest metadata.generation
+                  which resulted in either a ready state, or stalled due to error
+                  it can not recover from without human intervention.
+                format: int64
+                type: integer
+            type: object
+        required:
+        - spec
+        type: object
+    served: true
+    storage: true
+    subresources:
+      status: {}

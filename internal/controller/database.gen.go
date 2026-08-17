@@ -11,8 +11,8 @@ import (
 	"github.com/crossplane/crossplane-runtime/pkg/meta"
 	"github.com/crossplane/crossplane-runtime/pkg/reconciler/managed"
 	"github.com/crossplane/crossplane-runtime/pkg/resource"
-	pgbeam "github.com/pgbeam/pgbeam-go"
 	"github.com/pgbeam/provider-pgbeam/apis/v1alpha1"
+	pgbeam "go.pgbeam.com/sdk"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"time"
@@ -198,7 +198,7 @@ func (e *databaseExternal) Update(ctx context.Context, mg resource.Managed) (man
 	}
 	if fp.Role != "" {
 		v := pgbeam.DatabaseRole(fp.Role)
-		if database.Role == nil || v != *database.Role {
+		if database.Role == nil || string(v) != string(*database.Role) {
 			req.Role = &v
 			needsUpdate = true
 		}
@@ -286,13 +286,13 @@ func isDatabaseUpToDate(fp v1alpha1.DatabaseForProvider, d *pgbeam.Database) boo
 		return false
 	}
 	if fp.SSLMode != "" {
-		if pgbeam.SSLMode(fp.SSLMode) != d.SslMode {
+		if fp.SSLMode != string(d.SslMode) {
 			return false
 		}
 	}
 	if fp.Role != "" {
 		v := pgbeam.DatabaseRole(fp.Role)
-		if d.Role == nil || v != *d.Role {
+		if d.Role == nil || string(v) != string(*d.Role) {
 			return false
 		}
 	}
