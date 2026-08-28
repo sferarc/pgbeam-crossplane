@@ -159,11 +159,12 @@ func (e *agentCredentialExternal) Update(ctx context.Context, mg resource.Manage
 	}
 
 	req := pgbeam.UpdateAgentCredentialStatusRequest{}
-	needsUpdate := !isAgentCredentialUpToDate(fp, agentCredential)
+	needsUpdate := false
 
-	if fp.Status != "" {
+	if fp.Status != "" && fp.Status != string(agentCredential.Status) {
 		v := pgbeam.UpdateAgentCredentialStatusRequestStatus(fp.Status)
 		req.Status = v
+		needsUpdate = true
 	}
 
 	if needsUpdate {
