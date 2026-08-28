@@ -1,6 +1,6 @@
 # Controller image for the PgBeam Crossplane provider.
 # Built and pushed to ghcr.io/sferarc/provider-pgbeam by the release workflow.
-FROM golang:1.26 AS build
+FROM golang:1.27 AS build
 
 WORKDIR /src
 
