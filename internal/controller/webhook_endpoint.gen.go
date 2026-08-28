@@ -145,28 +145,21 @@ func (e *webhookEndpointExternal) Update(ctx context.Context, mg resource.Manage
 	}
 
 	req := pgbeam.WebhookEndpointInput{}
-	needsUpdate := false
+	needsUpdate := !isWebhookEndpointUpToDate(fp, webhookEndpoint)
 
-	if fp.URL != webhookEndpoint.Url {
-		req.Url = fp.URL
-		needsUpdate = true
-	}
-	if fp.Format != string(webhookEndpoint.Format) {
+	req.Url = fp.URL
+	if fp.Format != "" {
 		v := pgbeam.WebhookEndpointInputFormat(fp.Format)
 		req.Format = &v
-		needsUpdate = true
 	}
 	if fp.EventTypes != nil {
 		req.EventTypes = &fp.EventTypes
-		needsUpdate = true
 	}
-	if fp.Enabled != nil && (*fp.Enabled != webhookEndpoint.Enabled) {
+	if fp.Enabled != nil {
 		req.Enabled = fp.Enabled
-		needsUpdate = true
 	}
-	if fp.Description != nil && (webhookEndpoint.Description == nil || *fp.Description != *webhookEndpoint.Description) {
+	if fp.Description != nil {
 		req.Description = fp.Description
-		needsUpdate = true
 	}
 
 	secret, err := e.connector.getSecretValue(ctx, fp.SecretSecretRef)

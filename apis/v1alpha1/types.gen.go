@@ -1305,3 +1305,78 @@ type SelfHostEnrollmentList struct {
 	metav1.ListMeta `json:"metadata,omitempty"`
 	Items           []SelfHostEnrollment `json:"items"`
 }
+
+// ============================================================================
+// Honeytoken
+// ============================================================================
+
+// HoneytokenForProvider defines the desired state of a Honeytoken.
+type HoneytokenForProvider struct {
+	// ProjectID is the project the honeytoken belongs to.
+	// +kubebuilder:validation:Required
+	// +immutable
+	ProjectID string `json:"projectID"`
+
+	// SchemaName is the optional schema. null matches the unqualified/public form, mirroring the relation allowlist normalization.
+	// +optional
+	SchemaName *string `json:"schemaName,omitempty"`
+
+	// RelationName is the relation (table or view) name of the decoy.
+	// +kubebuilder:validation:Required
+	RelationName string `json:"relationName"`
+
+	// Action is the response when tripped. audit_only blocks the statement, records the event, and fires webhooks. kill additionally disables the tripping credential via the kill-switch.
+	// +kubebuilder:validation:Required
+	// +kubebuilder:validation:Enum=audit_only;kill
+	Action string `json:"action"`
+}
+
+// HoneytokenAtProvider defines the observed state of a Honeytoken.
+type HoneytokenAtProvider struct {
+	// ID is the PgBeam honeytoken ID.
+	ID string `json:"id,omitempty"`
+
+	// CreatedAt is the when the honeytoken was registered.
+	CreatedAt string `json:"createdAt,omitempty"`
+
+	// UpdatedAt is the when the honeytoken was last updated.
+	UpdatedAt string `json:"updatedAt,omitempty"`
+}
+
+// HoneytokenSpec defines the desired state of a Honeytoken.
+type HoneytokenSpec struct {
+	xpv1.ResourceSpec `json:",inline"`
+	ForProvider       HoneytokenForProvider `json:"forProvider"`
+}
+
+// HoneytokenStatus defines the observed state of a Honeytoken.
+type HoneytokenStatus struct {
+	xpv1.ResourceStatus `json:",inline"`
+	AtProvider          HoneytokenAtProvider `json:"atProvider,omitempty"`
+}
+
+// +kubebuilder:object:root=true
+// +kubebuilder:subresource:status
+// +kubebuilder:resource:scope=Cluster,categories=crossplane;managed;pgbeam
+// +kubebuilder:printcolumn:name="READY",type="string",JSONPath=".status.conditions[?(@.type=='Ready')].status"
+// +kubebuilder:printcolumn:name="SYNCED",type="string",JSONPath=".status.conditions[?(@.type=='Synced')].status"
+// +kubebuilder:printcolumn:name="EXTERNAL-NAME",type="string",JSONPath=".metadata.annotations.crossplane\\.io/external-name"
+// +kubebuilder:printcolumn:name="AGE",type="date",JSONPath=".metadata.creationTimestamp"
+
+// Honeytoken is a managed resource that represents a PgBeam Honeytoken.
+type Honeytoken struct {
+	metav1.TypeMeta   `json:",inline"`
+	metav1.ObjectMeta `json:"metadata,omitempty"`
+
+	Spec   HoneytokenSpec   `json:"spec"`
+	Status HoneytokenStatus `json:"status,omitempty"`
+}
+
+// +kubebuilder:object:root=true
+
+// HoneytokenList contains a list of Honeytokens.
+type HoneytokenList struct {
+	metav1.TypeMeta `json:",inline"`
+	metav1.ListMeta `json:"metadata,omitempty"`
+	Items           []Honeytoken `json:"items"`
+}

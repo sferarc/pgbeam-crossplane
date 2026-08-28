@@ -21,6 +21,7 @@ func Setup(mgr ctrl.Manager, o controller.Options) error {
 		SetupPolicyProfile,
 		SetupWebhookEndpoint,
 		SetupSelfHostEnrollment,
+		SetupHoneytoken,
 	} {
 		if err := setup(mgr, o); err != nil {
 			return err

@@ -505,3 +505,53 @@ func (she *SelfHostEnrollment) GetPublishConnectionDetailsTo() *xpv1.PublishConn
 func (she *SelfHostEnrollment) SetPublishConnectionDetailsTo(ref *xpv1.PublishConnectionDetailsTo) {
 	she.Spec.PublishConnectionDetailsTo = ref
 }
+
+// Managed resource interface methods for Honeytoken.
+
+func (h *Honeytoken) GetCondition(ct xpv1.ConditionType) xpv1.Condition {
+	return h.Status.GetCondition(ct)
+}
+
+func (h *Honeytoken) SetConditions(c ...xpv1.Condition) {
+	h.Status.SetConditions(c...)
+}
+
+func (h *Honeytoken) GetProviderConfigReference() *xpv1.Reference {
+	return h.Spec.ProviderConfigReference
+}
+
+func (h *Honeytoken) SetProviderConfigReference(ref *xpv1.Reference) {
+	h.Spec.ProviderConfigReference = ref
+}
+
+func (h *Honeytoken) GetDeletionPolicy() xpv1.DeletionPolicy {
+	return h.Spec.DeletionPolicy
+}
+
+func (h *Honeytoken) SetDeletionPolicy(dp xpv1.DeletionPolicy) {
+	h.Spec.DeletionPolicy = dp
+}
+
+func (h *Honeytoken) GetManagementPolicies() xpv1.ManagementPolicies {
+	return h.Spec.ManagementPolicies
+}
+
+func (h *Honeytoken) SetManagementPolicies(mp xpv1.ManagementPolicies) {
+	h.Spec.ManagementPolicies = mp
+}
+
+func (h *Honeytoken) GetWriteConnectionSecretToReference() *xpv1.SecretReference {
+	return h.Spec.WriteConnectionSecretToReference
+}
+
+func (h *Honeytoken) SetWriteConnectionSecretToReference(ref *xpv1.SecretReference) {
+	h.Spec.WriteConnectionSecretToReference = ref
+}
+
+func (h *Honeytoken) GetPublishConnectionDetailsTo() *xpv1.PublishConnectionDetailsTo {
+	return h.Spec.PublishConnectionDetailsTo
+}
+
+func (h *Honeytoken) SetPublishConnectionDetailsTo(ref *xpv1.PublishConnectionDetailsTo) {
+	h.Spec.PublishConnectionDetailsTo = ref
+}

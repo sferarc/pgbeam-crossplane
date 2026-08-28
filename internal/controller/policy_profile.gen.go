@@ -194,24 +194,18 @@ func (e *policyProfileExternal) Update(ctx context.Context, mg resource.Managed)
 	}
 
 	req := pgbeam.PolicyProfileInput{}
-	needsUpdate := false
+	needsUpdate := !isPolicyProfileUpToDate(fp, policyProfile)
 
-	if fp.Name != policyProfile.Name {
-		req.Name = fp.Name
-		needsUpdate = true
-	}
-	if fp.AccessMode != string(policyProfile.AccessMode) {
+	req.Name = fp.Name
+	if fp.AccessMode != "" {
 		v := pgbeam.PolicyProfileInputAccessMode(fp.AccessMode)
 		req.AccessMode = &v
-		needsUpdate = true
 	}
 	if fp.TableAllowlist != nil {
 		req.TableAllowlist = &fp.TableAllowlist
-		needsUpdate = true
 	}
 	if fp.TableDenylist != nil {
 		req.TableDenylist = &fp.TableDenylist
-		needsUpdate = true
 	}
 	if fp.MaskingRules != nil {
 		maskingRulesEntries := make([]pgbeam.MaskingRule, len(fp.MaskingRules))
@@ -223,23 +217,18 @@ func (e *policyProfileExternal) Update(ctx context.Context, mg resource.Managed)
 			}
 		}
 		req.MaskingRules = &maskingRulesEntries
-		needsUpdate = true
 	}
-	if fp.BudgetQueriesPerHour != nil && (policyProfile.BudgetQueriesPerHour == nil || *fp.BudgetQueriesPerHour != *policyProfile.BudgetQueriesPerHour) {
+	if fp.BudgetQueriesPerHour != nil {
 		req.BudgetQueriesPerHour = fp.BudgetQueriesPerHour
-		needsUpdate = true
 	}
-	if fp.BudgetQueriesPerDay != nil && (policyProfile.BudgetQueriesPerDay == nil || *fp.BudgetQueriesPerDay != *policyProfile.BudgetQueriesPerDay) {
+	if fp.BudgetQueriesPerDay != nil {
 		req.BudgetQueriesPerDay = fp.BudgetQueriesPerDay
-		needsUpdate = true
 	}
-	if fp.MaxRows != nil && (policyProfile.MaxRows == nil || *fp.MaxRows != *policyProfile.MaxRows) {
+	if fp.MaxRows != nil {
 		req.MaxRows = fp.MaxRows
-		needsUpdate = true
 	}
-	if fp.StatementTimeoutMs != nil && (policyProfile.StatementTimeoutMs == nil || *fp.StatementTimeoutMs != *policyProfile.StatementTimeoutMs) {
+	if fp.StatementTimeoutMs != nil {
 		req.StatementTimeoutMs = fp.StatementTimeoutMs
-		needsUpdate = true
 	}
 	if fp.RowFilters != nil {
 		rowFiltersEntries := make([]pgbeam.RowFilter, len(fp.RowFilters))
@@ -250,51 +239,36 @@ func (e *policyProfileExternal) Update(ctx context.Context, mg resource.Managed)
 			}
 		}
 		req.RowFilters = &rowFiltersEntries
-		needsUpdate = true
 	}
 	if fp.WriteMode != "" {
 		v := pgbeam.PolicyProfileInputWriteMode(fp.WriteMode)
-		if policyProfile.WriteMode == nil || string(v) != string(*policyProfile.WriteMode) {
-			req.WriteMode = &v
-			needsUpdate = true
-		}
+		req.WriteMode = &v
 	}
 	if fp.ApprovalMode != "" {
 		v := pgbeam.PolicyProfileInputApprovalMode(fp.ApprovalMode)
-		if policyProfile.ApprovalMode == nil || string(v) != string(*policyProfile.ApprovalMode) {
-			req.ApprovalMode = &v
-			needsUpdate = true
-		}
+		req.ApprovalMode = &v
 	}
-	if fp.ApprovalAutoMaxRows != nil && (policyProfile.ApprovalAutoMaxRows == nil || *fp.ApprovalAutoMaxRows != *policyProfile.ApprovalAutoMaxRows) {
+	if fp.ApprovalAutoMaxRows != nil {
 		req.ApprovalAutoMaxRows = fp.ApprovalAutoMaxRows
-		needsUpdate = true
 	}
-	if fp.ApprovalTimeoutSeconds != nil && (policyProfile.ApprovalTimeoutSeconds == nil || *fp.ApprovalTimeoutSeconds != *policyProfile.ApprovalTimeoutSeconds) {
+	if fp.ApprovalTimeoutSeconds != nil {
 		req.ApprovalTimeoutSeconds = fp.ApprovalTimeoutSeconds
-		needsUpdate = true
 	}
 	if fp.MigrationSafety != "" {
 		v := pgbeam.PolicyProfileInputMigrationSafety(fp.MigrationSafety)
-		if policyProfile.MigrationSafety == nil || string(v) != string(*policyProfile.MigrationSafety) {
-			req.MigrationSafety = &v
-			needsUpdate = true
-		}
+		req.MigrationSafety = &v
 	}
-	if fp.EgressBytesPerDay != nil && (policyProfile.EgressBytesPerDay == nil || *fp.EgressBytesPerDay != *policyProfile.EgressBytesPerDay) {
+	if fp.EgressBytesPerDay != nil {
 		req.EgressBytesPerDay = fp.EgressBytesPerDay
-		needsUpdate = true
 	}
-	if fp.MaxAffectedRows != nil && (policyProfile.MaxAffectedRows == nil || *fp.MaxAffectedRows != *policyProfile.MaxAffectedRows) {
+	if fp.MaxAffectedRows != nil {
 		req.MaxAffectedRows = fp.MaxAffectedRows
-		needsUpdate = true
 	}
 	if fp.StatementRules != nil {
 		req.StatementRules = &pgbeam.StatementRules{
 			Allow: fp.StatementRules.Allow,
 			Deny:  fp.StatementRules.Deny,
 		}
-		needsUpdate = true
 	}
 
 	if needsUpdate {

@@ -36,6 +36,7 @@ func init() {
 		&PolicyProfile{}, &PolicyProfileList{},
 		&WebhookEndpoint{}, &WebhookEndpointList{},
 		&SelfHostEnrollment{}, &SelfHostEnrollmentList{},
+		&Honeytoken{}, &HoneytokenList{},
 		&ProviderConfig{}, &ProviderConfigList{},
 		&ProviderConfigUsage{}, &ProviderConfigUsageList{},
 	)
@@ -119,4 +120,12 @@ var (
 	SelfHostEnrollmentGroupKind        = schema.GroupKind{Group: Group, Kind: SelfHostEnrollmentKind}.String()
 	SelfHostEnrollmentKindAPIVersion   = SelfHostEnrollmentKind + "." + SchemeGroupVersion.String()
 	SelfHostEnrollmentGroupVersionKind = SchemeGroupVersion.WithKind(SelfHostEnrollmentKind)
+)
+
+// Honeytoken type metadata.
+var (
+	HoneytokenKind             = reflect.TypeOf(Honeytoken{}).Name()
+	HoneytokenGroupKind        = schema.GroupKind{Group: Group, Kind: HoneytokenKind}.String()
+	HoneytokenKindAPIVersion   = HoneytokenKind + "." + SchemeGroupVersion.String()
+	HoneytokenGroupVersionKind = SchemeGroupVersion.WithKind(HoneytokenKind)
 )
