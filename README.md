@@ -135,7 +135,7 @@ spec:
 ## Documentation
 
 Full usage guide at
-[docs.pgbeam.com/crossplane](https://docs.pgbeam.com/crossplane).
+[pgbeam.com/docs/crossplane](https://pgbeam.com/docs/crossplane).
 
 ## License
 
