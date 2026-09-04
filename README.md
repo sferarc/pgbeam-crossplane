@@ -1,7 +1,6 @@
 # PgBeam Crossplane Provider
 
-Crossplane provider for [PgBeam](https://pgbeam.com) — manage your globally
-distributed PostgreSQL proxy infrastructure using Kubernetes custom resources.
+Crossplane provider for [PgBeam](https://pgbeam.com) — manage your globally distributed PostgreSQL proxy infrastructure using Kubernetes custom resources.
 
 ## Install
 
@@ -49,22 +48,20 @@ spec:
 
 ## Resources
 
-| Kind              | API Version          | Description                          |
-| ----------------- | -------------------- | ------------------------------------ |
-| `Project`         | `pgbeam.io/v1alpha1` | PgBeam project                       |
-| `Database`        | `pgbeam.io/v1alpha1` | PostgreSQL database connection       |
-| `Replica`         | `pgbeam.io/v1alpha1` | Read replica configuration           |
-| `CustomDomain`    | `pgbeam.io/v1alpha1` | Custom domain for connection strings |
-| `CacheRule`       | `pgbeam.io/v1alpha1` | Query caching rule                   |
-| `SpendLimit`      | `pgbeam.io/v1alpha1` | Budget controls                      |
-| `AgentCredential` | `pgbeam.io/v1alpha1` | Scoped agent credential              |
-| `WebhookEndpoint` | `pgbeam.io/v1alpha1` | Event delivery endpoint              |
+| Kind | API Version | Description |
+| --- | --- | --- |
+| `Project` | `pgbeam.io/v1alpha1` | PgBeam project |
+| `Database` | `pgbeam.io/v1alpha1` | PostgreSQL database connection |
+| `Replica` | `pgbeam.io/v1alpha1` | Read replica configuration |
+| `CustomDomain` | `pgbeam.io/v1alpha1` | Custom domain for connection strings |
+| `CacheRule` | `pgbeam.io/v1alpha1` | Query caching rule |
+| `SpendLimit` | `pgbeam.io/v1alpha1` | Budget controls |
+| `AgentCredential` | `pgbeam.io/v1alpha1` | Scoped agent credential |
+| `WebhookEndpoint` | `pgbeam.io/v1alpha1` | Event delivery endpoint |
 
 ## Agent gateway
 
-The agent gateway issues scoped,
-policy-enforced credentials for AI agents and delivers audit/anomaly events to
-webhook endpoints.
+The agent gateway issues scoped, policy-enforced credentials for AI agents and delivers audit/anomaly events to webhook endpoints.
 
 ```yaml
 apiVersion: pgbeam.io/v1alpha1
@@ -100,23 +97,13 @@ spec:
     namespace: default
 ```
 
-> **Agent credential secrets caveat.** The one-time `connection_string` and
-> `mcp_token` are returned only at creation and are published to the
-> `writeConnectionSecretToRef` Secret (keys `connectionString`, `mcpToken`)
-> rather than stored in the resource status. The non-secret `mcpUrl` is exposed
-> in `status.atProvider`. To rotate, delete and recreate the resource.
+> **Agent credential secrets caveat.** The one-time `connection_string` and `mcp_token` are returned only at creation and are published to the `writeConnectionSecretToRef` Secret (keys `connectionString`, `mcpToken`) rather than stored in the resource status. The non-secret `mcpUrl` is exposed in `status.atProvider`. To rotate, delete and recreate the resource.
 
-> **Policy profiles are not yet managed as code.** `policyProfileID` (above, and
-> `defaultPolicyProfileID` on a `Project`) is the ID of a policy profile that
-> must be created out of band with `pgbeam policies create` or the dashboard —
-> there is no `PolicyProfile` managed resource yet. The policy itself, the most
-> security-sensitive primitive, therefore lives outside your reviewed GitOps flow
-> and is invisible to Crossplane drift reconciliation.
+> **Policy profiles are not yet managed as code.** `policyProfileID` (above, and `defaultPolicyProfileID` on a `Project`) is the ID of a policy profile that must be created out of band with `pgbeam policies create` or the dashboard — there is no `PolicyProfile` managed resource yet. The policy itself, the most security-sensitive primitive, therefore lives outside your reviewed GitOps flow and is invisible to Crossplane drift reconciliation.
 
 ## Authentication
 
-Create a Kubernetes secret with your PgBeam API token and reference it in a
-`ProviderConfig`:
+Create a Kubernetes secret with your PgBeam API token and reference it in a `ProviderConfig`:
 
 ```yaml
 apiVersion: pgbeam.io/v1alpha1
@@ -134,14 +121,11 @@ spec:
 
 ## Documentation
 
-Full usage guide at
-[pgbeam.com/docs/crossplane](https://pgbeam.com/docs/crossplane).
+Full usage guide at [pgbeam.com/docs/crossplane](https://pgbeam.com/docs/crossplane).
 
 ## Contributing
 
-Issues and pull requests are welcome here. An issue is the right place to start
-for a bug, a wrong doc, or a missing capability; say what you ran, what
-happened, what you expected, and which version you were on.
+Issues and pull requests are welcome here. An issue is the right place to start for a bug, a wrong doc, or a missing capability; say what you ran, what happened, what you expected, and which version you were on.
 
 To build and test it locally:
 
@@ -150,9 +134,7 @@ go build ./...
 go test ./...
 ```
 
-Do not open a public issue for a suspected security vulnerability. Email
-security@pgbeam.com, or report it privately from this repository's Security
-tab.
+Do not open a public issue for a suspected security vulnerability. Email security@pgbeam.com, or report it privately from this repository's Security tab.
 
 ## License
 
