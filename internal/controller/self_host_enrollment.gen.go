@@ -69,7 +69,7 @@ func (e *selfHostEnrollmentExternal) Observe(ctx context.Context, mg resource.Ma
 		return managed.ExternalObservation{ResourceExists: false}, nil
 	}
 
-	// No individual Get endpoint; list and filter by ID.
+	// No individual Get endpoint; list and filter by ID with pagination.
 	selfHostEnrollment, err := e.getSelfHostEnrollment(ctx, cr.Spec.ForProvider.OrgID, externalName)
 	if err != nil {
 		if pgbeam.IsNotFound(err) {
@@ -137,16 +137,24 @@ func (e *selfHostEnrollmentExternal) Delete(ctx context.Context, mg resource.Man
 	return managed.ExternalDelete{}, nil
 }
 
-// getSelfHostEnrollment lists self host enrollments for a org and returns the one matching id.
+// getSelfHostEnrollment paginates through ListSelfHostEnrollments to find a self host enrollment by Id.
 func (e *selfHostEnrollmentExternal) getSelfHostEnrollment(ctx context.Context, orgID string, id string) (*pgbeam.SelfHostEnrollment, error) {
-	resp, err := e.client.Platform.ListSelfHostEnrollments(ctx, orgID)
-	if err != nil {
-		return nil, err
-	}
-	for i := range resp.Enrollments {
-		if resp.Enrollments[i].Id == id {
-			return &resp.Enrollments[i], nil
+	var pageToken *string
+	for {
+		params := &pgbeam.ListSelfHostEnrollmentsParams{PageToken: pageToken}
+		resp, err := e.client.Platform.ListSelfHostEnrollments(ctx, orgID, params)
+		if err != nil {
+			return nil, err
 		}
+		for i := range resp.Enrollments {
+			if resp.Enrollments[i].Id == id {
+				return &resp.Enrollments[i], nil
+			}
+		}
+		if resp.NextPageToken == nil || *resp.NextPageToken == "" {
+			break
+		}
+		pageToken = resp.NextPageToken
 	}
 	return nil, &pgbeam.APIError{StatusCode: 404, Status: "Not Found", Body: fmt.Sprintf("self host enrollment %s not found in org %s", id, orgID)}
 }

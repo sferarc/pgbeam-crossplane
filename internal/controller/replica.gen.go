@@ -69,7 +69,7 @@ func (e *replicaExternal) Observe(ctx context.Context, mg resource.Managed) (man
 		return managed.ExternalObservation{ResourceExists: false}, nil
 	}
 
-	// No individual Get endpoint; list and filter by ID.
+	// No individual Get endpoint; list and filter by ID with pagination.
 	replica, err := e.getReplica(ctx, cr.Spec.ForProvider.DatabaseID, externalName)
 	if err != nil {
 		if pgbeam.IsNotFound(err) {
@@ -133,16 +133,24 @@ func (e *replicaExternal) Delete(ctx context.Context, mg resource.Managed) (mana
 	return managed.ExternalDelete{}, nil
 }
 
-// getReplica lists replicas for a database and returns the one matching id.
+// getReplica paginates through ListReplicas to find a replica by Id.
 func (e *replicaExternal) getReplica(ctx context.Context, databaseID string, id string) (*pgbeam.Replica, error) {
-	resp, err := e.client.Projects.ListReplicas(ctx, databaseID)
-	if err != nil {
-		return nil, err
-	}
-	for i := range resp.Replicas {
-		if resp.Replicas[i].Id == id {
-			return &resp.Replicas[i], nil
+	var pageToken *string
+	for {
+		params := &pgbeam.ListReplicasParams{PageToken: pageToken}
+		resp, err := e.client.Projects.ListReplicas(ctx, databaseID, params)
+		if err != nil {
+			return nil, err
 		}
+		for i := range resp.Replicas {
+			if resp.Replicas[i].Id == id {
+				return &resp.Replicas[i], nil
+			}
+		}
+		if resp.NextPageToken == nil || *resp.NextPageToken == "" {
+			break
+		}
+		pageToken = resp.NextPageToken
 	}
 	return nil, &pgbeam.APIError{StatusCode: 404, Status: "Not Found", Body: fmt.Sprintf("replica %s not found in database %s", id, databaseID)}
 }
