@@ -15,6 +15,8 @@ spec:
 
 ## Usage
 
+A project is created together with its primary database in one call, so the `database` object is required and immutable, as is `orgID`. A project has no `region`: by default (`residency: any`) PgBeam serves it from every metro and routes each client to the nearest one. Set `residency` to `us` or `eu` to require the serving metro to be in that jurisdiction. Where a connection pool lives is a per-database choice, via `poolRegion`.
+
 ```yaml
 apiVersion: pgbeam.io/v1alpha1
 kind: Project
@@ -22,24 +24,35 @@ metadata:
   name: my-project
 spec:
   forProvider:
+    orgID: org_123
     name: my-project
-    orgId: org_123
-    region: us-east-1
+    database:
+      host: your-db-host.example.com
+      port: 5432
+      name: mydb
+      username: dbuser
+      sslMode: require
+      passwordSecretRef:
+        name: db-credentials
+        namespace: default
+        key: password
+```
 
----
+To attach more databases later (a read replica, say), use the standalone `Database` resource with its own `projectID`. On both, `name` is the PostgreSQL database name on your server.
+
+```yaml
 apiVersion: pgbeam.io/v1alpha1
 kind: Database
 metadata:
-  name: primary
+  name: analytics
 spec:
   forProvider:
-    projectIdRef:
-      name: my-project
-    name: primary
-    host: your-db-host.example.com
+    projectID: prj_123
+    host: replica-host.example.com
     port: 5432
-    database: mydb
+    name: mydb
     username: dbuser
+    role: replica
     passwordSecretRef:
       name: db-credentials
       namespace: default
@@ -57,6 +70,7 @@ spec:
 | `CacheRule` | `pgbeam.io/v1alpha1` | Query caching rule |
 | `SpendLimit` | `pgbeam.io/v1alpha1` | Budget controls |
 | `AgentCredential` | `pgbeam.io/v1alpha1` | Scoped agent credential |
+| `PolicyProfile` | `pgbeam.io/v1alpha1` | Policy profile (access mode, allowlists, masking, budgets) |
 | `WebhookEndpoint` | `pgbeam.io/v1alpha1` | Event delivery endpoint |
 
 ## Agent gateway
@@ -97,13 +111,27 @@ spec:
     namespace: default
 ```
 
-> **Agent credential secrets caveat.** The one-time `connection_string` and `mcp_token` are returned only at creation and are published to the `writeConnectionSecretToRef` Secret (keys `connectionString`, `mcpToken`) rather than stored in the resource status. The non-secret `mcpUrl` is exposed in `status.atProvider`. To rotate, delete and recreate the resource.
+> **Agent credential secrets caveat.** The one-time `connection_string` and `mcp_token` are returned only at creation and are published to the `writeConnectionSecretToRef` Secret (keys `connectionString`, `mcpToken`) rather than stored in the resource status. The non-secret `mcpURL` is exposed in `status.atProvider`. To rotate, delete and recreate the resource.
 
-> **Policy profiles are not yet managed as code.** `policyProfileID` (above, and `defaultPolicyProfileID` on a `Project`) is the ID of a policy profile that must be created out of band with `pgbeam policies create` or the dashboard — there is no `PolicyProfile` managed resource yet. The policy itself, the most security-sensitive primitive, therefore lives outside your reviewed GitOps flow and is invisible to Crossplane drift reconciliation.
+Manage policies as code with the `PolicyProfile` resource:
+
+```yaml
+apiVersion: pgbeam.io/v1alpha1
+kind: PolicyProfile
+metadata:
+  name: read-only
+spec:
+  forProvider:
+    projectID: prj_123
+    name: read-only
+    accessMode: read_only
+```
+
+A `PolicyProfile` publishes its ID as `status.atProvider.id`. Supply that value wherever a profile is required: `policyProfileID` on an `AgentCredential` (see the example above), or `defaultPolicyProfileID` on a `Project` to enforce a profile on passthrough/human connections. Keeping the profile here puts the most security-sensitive primitive under Crossplane drift reconciliation.
 
 ## Authentication
 
-Create a Kubernetes secret with your PgBeam API token and reference it in a `ProviderConfig`:
+Create a Kubernetes secret with your PgBeam API key and point `apiKeySecretRef` at it:
 
 ```yaml
 apiVersion: pgbeam.io/v1alpha1
@@ -111,13 +139,13 @@ kind: ProviderConfig
 metadata:
   name: default
 spec:
-  credentials:
-    source: Secret
-    secretRef:
-      name: pgbeam-credentials
-      namespace: crossplane-system
-      key: api-token
+  apiKeySecretRef:
+    name: pgbeam-credentials
+    namespace: crossplane-system
+    key: api-key
 ```
+
+Managed resources use the `ProviderConfig` named `default` unless they set their own `providerConfigRef`. The API base URL defaults to `https://api.pgbeam.com` and can be overridden with `spec.baseUrl`.
 
 ## Documentation
 
