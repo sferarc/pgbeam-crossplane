@@ -112,7 +112,11 @@ func (e *webhookEndpointExternal) Create(ctx context.Context, mg resource.Manage
 		req.Format = &v
 	}
 	if fp.EventTypes != nil {
-		req.EventTypes = &fp.EventTypes
+		eventTypesValues := make([]pgbeam.WebhookEventType, len(fp.EventTypes))
+		for i, s := range fp.EventTypes {
+			eventTypesValues[i] = pgbeam.WebhookEventType(s)
+		}
+		req.EventTypes = &eventTypesValues
 	}
 	if fp.Enabled != nil {
 		req.Enabled = fp.Enabled
@@ -153,7 +157,11 @@ func (e *webhookEndpointExternal) Update(ctx context.Context, mg resource.Manage
 		req.Format = &v
 	}
 	if fp.EventTypes != nil {
-		req.EventTypes = &fp.EventTypes
+		eventTypesValues := make([]pgbeam.WebhookEventType, len(fp.EventTypes))
+		for i, s := range fp.EventTypes {
+			eventTypesValues[i] = pgbeam.WebhookEventType(s)
+		}
+		req.EventTypes = &eventTypesValues
 	}
 	if fp.Enabled != nil {
 		req.Enabled = fp.Enabled
@@ -217,7 +225,7 @@ func isWebhookEndpointUpToDate(fp v1alpha1.WebhookEndpointForProvider, w *pgbeam
 				return false
 			}
 			for i, t := range fp.EventTypes {
-				if t != (*wTags)[i] {
+				if t != string((*wTags)[i]) {
 					return false
 				}
 			}
