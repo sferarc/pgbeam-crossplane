@@ -6,7 +6,7 @@ import (
 
 	xpv1 "github.com/crossplane/crossplane-runtime/apis/common/v1"
 	"github.com/crossplane/crossplane-runtime/pkg/resource"
-	"github.com/pgbeam/provider-pgbeam/apis/v1alpha1"
+	"github.com/sferarc/pgbeam-crossplane/apis/v1alpha1"
 	pgbeam "go.pgbeam.com/sdk"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/types"

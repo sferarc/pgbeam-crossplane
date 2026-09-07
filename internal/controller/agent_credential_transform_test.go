@@ -4,7 +4,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/pgbeam/provider-pgbeam/apis/v1alpha1"
+	"github.com/sferarc/pgbeam-crossplane/apis/v1alpha1"
 	pgbeam "go.pgbeam.com/sdk"
 )
 

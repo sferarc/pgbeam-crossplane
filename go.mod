@@ -1,4 +1,4 @@
-module github.com/pgbeam/provider-pgbeam
+module github.com/sferarc/pgbeam-crossplane
 
 go 1.25.0
 

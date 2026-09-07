@@ -9,12 +9,12 @@ import (
 	"github.com/crossplane/crossplane-runtime/pkg/feature"
 	"github.com/crossplane/crossplane-runtime/pkg/logging"
 	"github.com/crossplane/crossplane-runtime/pkg/ratelimiter"
-	"github.com/pgbeam/provider-pgbeam/apis/v1alpha1"
+	"github.com/sferarc/pgbeam-crossplane/apis/v1alpha1"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/cache"
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
 
-	pgbeamcontroller "github.com/pgbeam/provider-pgbeam/internal/controller"
+	pgbeamcontroller "github.com/sferarc/pgbeam-crossplane/internal/controller"
 
 	// Import k8s auth plugins.
 	_ "k8s.io/client-go/plugin/pkg/client/auth"
