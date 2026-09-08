@@ -18,7 +18,7 @@ spec:
 A project is created together with its primary database in one call, so the `database` object is required and immutable, as is `orgID`. A project has no `region`: by default (`residency: any`) PgBeam serves it from every metro and routes each client to the nearest one. Set `residency` to `us` or `eu` to require the serving metro to be in that jurisdiction. Where a connection pool lives is a per-database choice, via `poolRegion`.
 
 ```yaml
-apiVersion: pgbeam.io/v1alpha1
+apiVersion: pgbeam.com/v1alpha1
 kind: Project
 metadata:
   name: my-project
@@ -41,7 +41,7 @@ spec:
 To attach more databases later (a read replica, say), use the standalone `Database` resource with its own `projectID`. On both, `name` is the PostgreSQL database name on your server.
 
 ```yaml
-apiVersion: pgbeam.io/v1alpha1
+apiVersion: pgbeam.com/v1alpha1
 kind: Database
 metadata:
   name: analytics
@@ -63,22 +63,22 @@ spec:
 
 | Kind | API Version | Description |
 | --- | --- | --- |
-| `Project` | `pgbeam.io/v1alpha1` | PgBeam project |
-| `Database` | `pgbeam.io/v1alpha1` | PostgreSQL database connection |
-| `Replica` | `pgbeam.io/v1alpha1` | Read replica configuration |
-| `CustomDomain` | `pgbeam.io/v1alpha1` | Custom domain for connection strings |
-| `CacheRule` | `pgbeam.io/v1alpha1` | Query caching rule |
-| `SpendLimit` | `pgbeam.io/v1alpha1` | Budget controls |
-| `AgentCredential` | `pgbeam.io/v1alpha1` | Scoped agent credential |
-| `PolicyProfile` | `pgbeam.io/v1alpha1` | Policy profile (access mode, allowlists, masking, budgets) |
-| `WebhookEndpoint` | `pgbeam.io/v1alpha1` | Event delivery endpoint |
+| `Project` | `pgbeam.com/v1alpha1` | PgBeam project |
+| `Database` | `pgbeam.com/v1alpha1` | PostgreSQL database connection |
+| `Replica` | `pgbeam.com/v1alpha1` | Read replica configuration |
+| `CustomDomain` | `pgbeam.com/v1alpha1` | Custom domain for connection strings |
+| `CacheRule` | `pgbeam.com/v1alpha1` | Query caching rule |
+| `SpendLimit` | `pgbeam.com/v1alpha1` | Budget controls |
+| `AgentCredential` | `pgbeam.com/v1alpha1` | Scoped agent credential |
+| `PolicyProfile` | `pgbeam.com/v1alpha1` | Policy profile (access mode, allowlists, masking, budgets) |
+| `WebhookEndpoint` | `pgbeam.com/v1alpha1` | Event delivery endpoint |
 
 ## Agent gateway
 
 The agent gateway issues scoped, policy-enforced credentials for AI agents and delivers audit/anomaly events to webhook endpoints.
 
 ```yaml
-apiVersion: pgbeam.io/v1alpha1
+apiVersion: pgbeam.com/v1alpha1
 kind: WebhookEndpoint
 metadata:
   name: audit
@@ -95,7 +95,7 @@ spec:
       key: secret
 
 ---
-apiVersion: pgbeam.io/v1alpha1
+apiVersion: pgbeam.com/v1alpha1
 kind: AgentCredential
 metadata:
   name: analytics
@@ -116,7 +116,7 @@ spec:
 Manage policies as code with the `PolicyProfile` resource:
 
 ```yaml
-apiVersion: pgbeam.io/v1alpha1
+apiVersion: pgbeam.com/v1alpha1
 kind: PolicyProfile
 metadata:
   name: read-only
@@ -134,7 +134,7 @@ A `PolicyProfile` publishes its ID as `status.atProvider.id`. Supply that value 
 Create a Kubernetes secret with your PgBeam API key and point `apiKeySecretRef` at it:
 
 ```yaml
-apiVersion: pgbeam.io/v1alpha1
+apiVersion: pgbeam.com/v1alpha1
 kind: ProviderConfig
 metadata:
   name: default
