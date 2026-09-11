@@ -163,6 +163,13 @@ func (e *policyProfileExternal) Create(ctx context.Context, mg resource.Managed)
 	if fp.MaxAffectedRows != nil {
 		req.MaxAffectedRows = fp.MaxAffectedRows
 	}
+	if fp.ContentScanMode != "" {
+		v := pgbeam.PolicyProfileInputContentScanMode(fp.ContentScanMode)
+		req.ContentScanMode = &v
+	}
+	if fp.ContentScanMaxBytes != nil {
+		req.ContentScanMaxBytes = fp.ContentScanMaxBytes
+	}
 	if fp.StatementRules != nil {
 		req.StatementRules = &pgbeam.StatementRules{
 			Allow: fp.StatementRules.Allow,
@@ -263,6 +270,13 @@ func (e *policyProfileExternal) Update(ctx context.Context, mg resource.Managed)
 	}
 	if fp.MaxAffectedRows != nil {
 		req.MaxAffectedRows = fp.MaxAffectedRows
+	}
+	if fp.ContentScanMode != "" {
+		v := pgbeam.PolicyProfileInputContentScanMode(fp.ContentScanMode)
+		req.ContentScanMode = &v
+	}
+	if fp.ContentScanMaxBytes != nil {
+		req.ContentScanMaxBytes = fp.ContentScanMaxBytes
 	}
 	if fp.StatementRules != nil {
 		req.StatementRules = &pgbeam.StatementRules{
@@ -406,6 +420,15 @@ func isPolicyProfileUpToDate(fp v1alpha1.PolicyProfileForProvider, p *pgbeam.Pol
 		return false
 	}
 	if fp.MaxAffectedRows != nil && (p.MaxAffectedRows == nil || *fp.MaxAffectedRows != *p.MaxAffectedRows) {
+		return false
+	}
+	if fp.ContentScanMode != "" {
+		v := pgbeam.PolicyProfileContentScanMode(fp.ContentScanMode)
+		if p.ContentScanMode == nil || string(v) != string(*p.ContentScanMode) {
+			return false
+		}
+	}
+	if fp.ContentScanMaxBytes != nil && (p.ContentScanMaxBytes == nil || *fp.ContentScanMaxBytes != *p.ContentScanMaxBytes) {
 		return false
 	}
 	if fp.StatementRules != nil {

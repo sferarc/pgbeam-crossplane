@@ -114,6 +114,35 @@ spec:
                     description: BudgetQueriesPerHour is the max queries per rolling
                       hour window. 0 means unlimited.
                     type: integer
+                  contentScanMaxBytes:
+                    default: 0
+                    description: ContentScanMaxBytes is the byte budget for one statement's
+                      content scan, spanning all values in the result. stored but
+                      not yet read by any released proxy build, like content_scan_mode.
+                      once enforced, values past it are reported unscannable rather
+                      than skipped quietly. 0 uses the scanner default (4 mib), which
+                      covers an interactive result set and deliberately does not cover
+                      a bulk export.
+                    format: int64
+                    minimum: 0
+                    type: integer
+                  contentScanMode:
+                    default: "off"
+                    description: 'ContentScanMode is the result-content scanning,
+                      accepted and stored but not yet enforced: no released proxy
+                      build reads this field, so today every value behaves like off.
+                      once enforcement ships on the data-plane relay path, values
+                      on their way out to an agent will be checked for instruction-shaped
+                      content (stored prompt injection). off will scan nothing and
+                      cost nothing. annotate will forward every value unchanged and
+                      record what it found. block will additionally refuse the statement
+                      with an error naming the column, and never drop a row silently.
+                      a proxy build without result-content scanning ignores this field.'
+                    enum:
+                    - "off"
+                    - annotate
+                    - block
+                    type: string
                   egressBytesPerDay:
                     default: 0
                     description: EgressBytesPerDay is the per-day egress budget in
