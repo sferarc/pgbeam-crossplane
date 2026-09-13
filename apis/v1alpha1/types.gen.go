@@ -1083,13 +1083,13 @@ type PolicyProfileForProvider struct {
 	// +kubebuilder:validation:Minimum=0
 	MaxAffectedRows *int `json:"maxAffectedRows,omitempty"`
 
-	// ContentScanMode is the result-content scanning, accepted and stored but not yet enforced: no released proxy build reads this field, so today every value behaves like off. once enforcement ships on the data-plane relay path, values on their way out to an agent will be checked for instruction-shaped content (stored prompt injection). off will scan nothing and cost nothing. annotate will forward every value unchanged and record what it found. block will additionally refuse the statement with an error naming the column, and never drop a row silently. a proxy build without result-content scanning ignores this field.
+	// ContentScanMode is the result-content scanning, enforced on the data-plane relay path: values on their way out to an agent are checked for instruction-shaped content (stored prompt injection). off scans nothing and costs nothing. annotate scans and forwards every value unchanged, recording what it found. block is accepted and scans exactly as annotate does, but refusing the statement is not implemented yet, so today it also forwards every value. no mode drops or rewrites a row. findings currently surface in the proxy's own metrics and logs, as column names, techniques and coverage counts; the audit event, the anomaly feed and the webhook stream are not wired to them yet. values the scan cannot read (binary-format columns, columns this profile masks, and anything past content_scan_max_bytes) are counted as unscanned rather than reported clean. a proxy build older than result-content scanning ignores this field.
 	// +optional
 	// +kubebuilder:validation:Enum=off;annotate;block
 	// +kubebuilder:default=off
 	ContentScanMode string `json:"contentScanMode,omitempty"`
 
-	// ContentScanMaxBytes is the byte budget for one statement's content scan, spanning all values in the result. stored but not yet read by any released proxy build, like content_scan_mode. once enforced, values past it are reported unscannable rather than skipped quietly. 0 uses the scanner default (4 mib), which covers an interactive result set and deliberately does not cover a bulk export.
+	// ContentScanMaxBytes is the byte budget for one statement's content scan, spanning all values in the result. values past it are reported unscannable rather than skipped quietly. the budget covers a whole statement, so the statements of one simple-query batch share it rather than each getting a fresh allowance. 0 uses the scanner default (4 mib), which covers an interactive result set and deliberately does not cover a bulk export.
 	// +optional
 	// +kubebuilder:default=0
 	// +kubebuilder:validation:Minimum=0
