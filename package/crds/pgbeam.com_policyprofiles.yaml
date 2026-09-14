@@ -139,12 +139,14 @@ spec:
                       a flagged statement records one content_flagged audit entry
                       naming the columns, the techniques and whether the scan covered
                       the whole result, alongside the proxy''s own metrics and logs;
-                      the entry carries no value from the row itself, and the anomaly
-                      feed and the webhook stream are not wired to it yet. values
-                      the scan cannot read (binary-format columns, columns this profile
-                      masks, and anything past content_scan_max_bytes) are counted
-                      as unscanned rather than reported clean. a proxy build older
-                      than result-content scanning ignores this field.'
+                      the entry carries no value from the row itself, and the webhook
+                      stream is not wired to it yet. a finding the structural detectors
+                      report at high confidence also raises an anomaly alert, at most
+                      one per credential per hour; lower-confidence findings stay
+                      in the audit trail. values the scan cannot read (binary-format
+                      columns, columns this profile masks, and anything past content_scan_max_bytes)
+                      are counted as unscanned rather than reported clean. a proxy
+                      build older than result-content scanning ignores this field.'
                     enum:
                     - "off"
                     - annotate
