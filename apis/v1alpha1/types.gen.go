@@ -1392,3 +1392,86 @@ type HoneytokenList struct {
 	metav1.ListMeta `json:"metadata,omitempty"`
 	Items           []Honeytoken `json:"items"`
 }
+
+// ============================================================================
+// AnomalyRule
+// ============================================================================
+
+// AnomalyRuleForProvider defines the desired state of a AnomalyRule.
+type AnomalyRuleForProvider struct {
+	// ProjectID is the project the rule belongs to.
+	// +kubebuilder:validation:Required
+	// +immutable
+	ProjectID string `json:"projectID"`
+
+	// CredentialID is the agent credential the rule applies to. null applies it to every credential in the project.
+	// +optional
+	CredentialID *string `json:"credentialID,omitempty"`
+
+	// Metric is the one of the five detection metrics. a rule retunes how sensitive one of them is; it adds no detection algorithm and no alert kind.
+	// +kubebuilder:validation:Required
+	// +kubebuilder:validation:Enum=queries_per_hour;bytes_per_hour;distinct_shapes;errors_per_hour;active_hours
+	Metric string `json:"metric"`
+
+	// SigmaThreshold is the n in the "mean + n * dispersion" spike rule. null leaves the deployment default in place.
+	// +optional
+	SigmaThreshold *float64 `json:"sigmaThreshold,omitempty"`
+
+	// Floor is the absolute floor below which the metric never alerts. null leaves the deployment default in place. only queries_per_hour, bytes_per_hour and errors_per_hour have a floor.
+	// +optional
+	Floor *float64 `json:"floor,omitempty"`
+
+	// Enabled is the false silences this metric for this scope. note the polarity is the opposite of honeytokens.enabled: the rule is the switch, so disabling it disables the metric rather than deactivating the rule.
+	// +optional
+	Enabled *bool `json:"enabled,omitempty"`
+}
+
+// AnomalyRuleAtProvider defines the observed state of a AnomalyRule.
+type AnomalyRuleAtProvider struct {
+	// ID is the PgBeam anomaly rule ID.
+	ID string `json:"id,omitempty"`
+
+	// CreatedAt is the when the rule was created.
+	CreatedAt string `json:"createdAt,omitempty"`
+
+	// UpdatedAt is the when the rule was last updated.
+	UpdatedAt string `json:"updatedAt,omitempty"`
+}
+
+// AnomalyRuleSpec defines the desired state of a AnomalyRule.
+type AnomalyRuleSpec struct {
+	xpv1.ResourceSpec `json:",inline"`
+	ForProvider       AnomalyRuleForProvider `json:"forProvider"`
+}
+
+// AnomalyRuleStatus defines the observed state of a AnomalyRule.
+type AnomalyRuleStatus struct {
+	xpv1.ResourceStatus `json:",inline"`
+	AtProvider          AnomalyRuleAtProvider `json:"atProvider,omitempty"`
+}
+
+// +kubebuilder:object:root=true
+// +kubebuilder:subresource:status
+// +kubebuilder:resource:scope=Cluster,categories=crossplane;managed;pgbeam
+// +kubebuilder:printcolumn:name="READY",type="string",JSONPath=".status.conditions[?(@.type=='Ready')].status"
+// +kubebuilder:printcolumn:name="SYNCED",type="string",JSONPath=".status.conditions[?(@.type=='Synced')].status"
+// +kubebuilder:printcolumn:name="EXTERNAL-NAME",type="string",JSONPath=".metadata.annotations.crossplane\\.io/external-name"
+// +kubebuilder:printcolumn:name="AGE",type="date",JSONPath=".metadata.creationTimestamp"
+
+// AnomalyRule is a managed resource that represents a PgBeam Anomaly Rule.
+type AnomalyRule struct {
+	metav1.TypeMeta   `json:",inline"`
+	metav1.ObjectMeta `json:"metadata,omitempty"`
+
+	Spec   AnomalyRuleSpec   `json:"spec"`
+	Status AnomalyRuleStatus `json:"status,omitempty"`
+}
+
+// +kubebuilder:object:root=true
+
+// AnomalyRuleList contains a list of AnomalyRules.
+type AnomalyRuleList struct {
+	metav1.TypeMeta `json:",inline"`
+	metav1.ListMeta `json:"metadata,omitempty"`
+	Items           []AnomalyRule `json:"items"`
+}

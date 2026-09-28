@@ -37,6 +37,7 @@ func init() {
 		&WebhookEndpoint{}, &WebhookEndpointList{},
 		&SelfHostEnrollment{}, &SelfHostEnrollmentList{},
 		&Honeytoken{}, &HoneytokenList{},
+		&AnomalyRule{}, &AnomalyRuleList{},
 		&ProviderConfig{}, &ProviderConfigList{},
 		&ProviderConfigUsage{}, &ProviderConfigUsageList{},
 	)
@@ -128,4 +129,12 @@ var (
 	HoneytokenGroupKind        = schema.GroupKind{Group: Group, Kind: HoneytokenKind}.String()
 	HoneytokenKindAPIVersion   = HoneytokenKind + "." + SchemeGroupVersion.String()
 	HoneytokenGroupVersionKind = SchemeGroupVersion.WithKind(HoneytokenKind)
+)
+
+// AnomalyRule type metadata.
+var (
+	AnomalyRuleKind             = reflect.TypeOf(AnomalyRule{}).Name()
+	AnomalyRuleGroupKind        = schema.GroupKind{Group: Group, Kind: AnomalyRuleKind}.String()
+	AnomalyRuleKindAPIVersion   = AnomalyRuleKind + "." + SchemeGroupVersion.String()
+	AnomalyRuleGroupVersionKind = SchemeGroupVersion.WithKind(AnomalyRuleKind)
 )

@@ -555,3 +555,53 @@ func (h *Honeytoken) GetPublishConnectionDetailsTo() *xpv1.PublishConnectionDeta
 func (h *Honeytoken) SetPublishConnectionDetailsTo(ref *xpv1.PublishConnectionDetailsTo) {
 	h.Spec.PublishConnectionDetailsTo = ref
 }
+
+// Managed resource interface methods for AnomalyRule.
+
+func (ar *AnomalyRule) GetCondition(ct xpv1.ConditionType) xpv1.Condition {
+	return ar.Status.GetCondition(ct)
+}
+
+func (ar *AnomalyRule) SetConditions(c ...xpv1.Condition) {
+	ar.Status.SetConditions(c...)
+}
+
+func (ar *AnomalyRule) GetProviderConfigReference() *xpv1.Reference {
+	return ar.Spec.ProviderConfigReference
+}
+
+func (ar *AnomalyRule) SetProviderConfigReference(ref *xpv1.Reference) {
+	ar.Spec.ProviderConfigReference = ref
+}
+
+func (ar *AnomalyRule) GetDeletionPolicy() xpv1.DeletionPolicy {
+	return ar.Spec.DeletionPolicy
+}
+
+func (ar *AnomalyRule) SetDeletionPolicy(dp xpv1.DeletionPolicy) {
+	ar.Spec.DeletionPolicy = dp
+}
+
+func (ar *AnomalyRule) GetManagementPolicies() xpv1.ManagementPolicies {
+	return ar.Spec.ManagementPolicies
+}
+
+func (ar *AnomalyRule) SetManagementPolicies(mp xpv1.ManagementPolicies) {
+	ar.Spec.ManagementPolicies = mp
+}
+
+func (ar *AnomalyRule) GetWriteConnectionSecretToReference() *xpv1.SecretReference {
+	return ar.Spec.WriteConnectionSecretToReference
+}
+
+func (ar *AnomalyRule) SetWriteConnectionSecretToReference(ref *xpv1.SecretReference) {
+	ar.Spec.WriteConnectionSecretToReference = ref
+}
+
+func (ar *AnomalyRule) GetPublishConnectionDetailsTo() *xpv1.PublishConnectionDetailsTo {
+	return ar.Spec.PublishConnectionDetailsTo
+}
+
+func (ar *AnomalyRule) SetPublishConnectionDetailsTo(ref *xpv1.PublishConnectionDetailsTo) {
+	ar.Spec.PublishConnectionDetailsTo = ref
+}
