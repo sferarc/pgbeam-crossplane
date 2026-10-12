@@ -186,6 +186,9 @@ func spendLimitObservation(o *pgbeam.OrganizationPlan) v1alpha1.SpendLimitAtProv
 	return obs
 }
 func isSpendLimitUpToDate(fp v1alpha1.SpendLimitForProvider, o *pgbeam.OrganizationPlan) bool {
+	if fp.SpendLimit == nil && o.SpendLimit != nil {
+		return false
+	}
 	if fp.SpendLimit != nil && (o.SpendLimit == nil || *fp.SpendLimit != *o.SpendLimit) {
 		return false
 	}

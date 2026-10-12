@@ -317,10 +317,16 @@ func isPolicyProfileUpToDate(fp v1alpha1.PolicyProfileForProvider, p *pgbeam.Pol
 	if fp.Name != p.Name {
 		return false
 	}
+	if fp.AccessMode == "" && string(p.AccessMode) != "read_only" {
+		return false
+	}
 	if fp.AccessMode != "" {
 		if fp.AccessMode != string(p.AccessMode) {
 			return false
 		}
+	}
+	if fp.TableAllowlist == nil && len(p.TableAllowlist) != 0 {
+		return false
 	}
 	if fp.TableAllowlist != nil {
 		pTags := p.TableAllowlist
@@ -333,6 +339,9 @@ func isPolicyProfileUpToDate(fp v1alpha1.PolicyProfileForProvider, p *pgbeam.Pol
 			}
 		}
 	}
+	if fp.TableDenylist == nil && len(p.TableDenylist) != 0 {
+		return false
+	}
 	if fp.TableDenylist != nil {
 		pTags := p.TableDenylist
 		if len(fp.TableDenylist) != len(pTags) {
@@ -343,6 +352,9 @@ func isPolicyProfileUpToDate(fp v1alpha1.PolicyProfileForProvider, p *pgbeam.Pol
 				return false
 			}
 		}
+	}
+	if fp.MaskingRules == nil && len(p.MaskingRules) != 0 {
+		return false
 	}
 	if fp.MaskingRules != nil {
 		pMaskingRules := p.MaskingRules
@@ -361,16 +373,31 @@ func isPolicyProfileUpToDate(fp v1alpha1.PolicyProfileForProvider, p *pgbeam.Pol
 			}
 		}
 	}
+	if fp.BudgetQueriesPerHour == nil && p.BudgetQueriesPerHour != nil && *p.BudgetQueriesPerHour != 0 {
+		return false
+	}
 	if fp.BudgetQueriesPerHour != nil && (p.BudgetQueriesPerHour == nil || *fp.BudgetQueriesPerHour != *p.BudgetQueriesPerHour) {
+		return false
+	}
+	if fp.BudgetQueriesPerDay == nil && p.BudgetQueriesPerDay != nil && *p.BudgetQueriesPerDay != 0 {
 		return false
 	}
 	if fp.BudgetQueriesPerDay != nil && (p.BudgetQueriesPerDay == nil || *fp.BudgetQueriesPerDay != *p.BudgetQueriesPerDay) {
 		return false
 	}
+	if fp.MaxRows == nil && p.MaxRows != nil && *p.MaxRows != 0 {
+		return false
+	}
 	if fp.MaxRows != nil && (p.MaxRows == nil || *fp.MaxRows != *p.MaxRows) {
 		return false
 	}
+	if fp.StatementTimeoutMs == nil && p.StatementTimeoutMs != nil && *p.StatementTimeoutMs != 0 {
+		return false
+	}
 	if fp.StatementTimeoutMs != nil && (p.StatementTimeoutMs == nil || *fp.StatementTimeoutMs != *p.StatementTimeoutMs) {
+		return false
+	}
+	if fp.RowFilters == nil && p.RowFilters != nil && len(*p.RowFilters) != 0 {
 		return false
 	}
 	if fp.RowFilters != nil {
@@ -392,11 +419,17 @@ func isPolicyProfileUpToDate(fp v1alpha1.PolicyProfileForProvider, p *pgbeam.Pol
 			}
 		}
 	}
+	if fp.WriteMode == "" && p.WriteMode != nil && string(*p.WriteMode) != "normal" {
+		return false
+	}
 	if fp.WriteMode != "" {
 		v := pgbeam.PolicyProfileWriteMode(fp.WriteMode)
 		if p.WriteMode == nil || string(v) != string(*p.WriteMode) {
 			return false
 		}
+	}
+	if fp.ApprovalMode == "" && p.ApprovalMode != nil && string(*p.ApprovalMode) != "off" {
+		return false
 	}
 	if fp.ApprovalMode != "" {
 		v := pgbeam.PolicyProfileApprovalMode(fp.ApprovalMode)
@@ -404,10 +437,19 @@ func isPolicyProfileUpToDate(fp v1alpha1.PolicyProfileForProvider, p *pgbeam.Pol
 			return false
 		}
 	}
+	if fp.ApprovalAutoMaxRows == nil && p.ApprovalAutoMaxRows != nil && *p.ApprovalAutoMaxRows != 0 {
+		return false
+	}
 	if fp.ApprovalAutoMaxRows != nil && (p.ApprovalAutoMaxRows == nil || *fp.ApprovalAutoMaxRows != *p.ApprovalAutoMaxRows) {
 		return false
 	}
+	if fp.ApprovalTimeoutSeconds == nil && p.ApprovalTimeoutSeconds != nil && *p.ApprovalTimeoutSeconds != 300 {
+		return false
+	}
 	if fp.ApprovalTimeoutSeconds != nil && (p.ApprovalTimeoutSeconds == nil || *fp.ApprovalTimeoutSeconds != *p.ApprovalTimeoutSeconds) {
+		return false
+	}
+	if fp.MigrationSafety == "" && p.MigrationSafety != nil && string(*p.MigrationSafety) != "off" {
 		return false
 	}
 	if fp.MigrationSafety != "" {
@@ -416,10 +458,19 @@ func isPolicyProfileUpToDate(fp v1alpha1.PolicyProfileForProvider, p *pgbeam.Pol
 			return false
 		}
 	}
+	if fp.EgressBytesPerDay == nil && p.EgressBytesPerDay != nil && *p.EgressBytesPerDay != 0 {
+		return false
+	}
 	if fp.EgressBytesPerDay != nil && (p.EgressBytesPerDay == nil || *fp.EgressBytesPerDay != *p.EgressBytesPerDay) {
 		return false
 	}
+	if fp.MaxAffectedRows == nil && p.MaxAffectedRows != nil && *p.MaxAffectedRows != 0 {
+		return false
+	}
 	if fp.MaxAffectedRows != nil && (p.MaxAffectedRows == nil || *fp.MaxAffectedRows != *p.MaxAffectedRows) {
+		return false
+	}
+	if fp.ContentScanMode == "" && p.ContentScanMode != nil && string(*p.ContentScanMode) != "off" {
 		return false
 	}
 	if fp.ContentScanMode != "" {
@@ -428,7 +479,13 @@ func isPolicyProfileUpToDate(fp v1alpha1.PolicyProfileForProvider, p *pgbeam.Pol
 			return false
 		}
 	}
+	if fp.ContentScanMaxBytes == nil && p.ContentScanMaxBytes != nil && *p.ContentScanMaxBytes != 0 {
+		return false
+	}
 	if fp.ContentScanMaxBytes != nil && (p.ContentScanMaxBytes == nil || *fp.ContentScanMaxBytes != *p.ContentScanMaxBytes) {
+		return false
+	}
+	if fp.StatementRules == nil && p.StatementRules != nil {
 		return false
 	}
 	if fp.StatementRules != nil {

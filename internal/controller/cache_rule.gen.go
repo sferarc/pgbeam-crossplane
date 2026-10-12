@@ -183,7 +183,13 @@ func isCacheRuleUpToDate(fp v1alpha1.CacheRuleForProvider, c *pgbeam.CacheRuleEn
 	if fp.CacheEnabled != c.CacheEnabled {
 		return false
 	}
+	if fp.CacheTTLSeconds == nil && c.CacheTtlSeconds != nil {
+		return false
+	}
 	if fp.CacheTTLSeconds != nil && (c.CacheTtlSeconds == nil || *fp.CacheTTLSeconds != *c.CacheTtlSeconds) {
+		return false
+	}
+	if fp.CacheSWRSeconds == nil && c.CacheSwrSeconds != nil {
 		return false
 	}
 	if fp.CacheSWRSeconds != nil && (c.CacheSwrSeconds == nil || *fp.CacheSWRSeconds != *c.CacheSwrSeconds) {

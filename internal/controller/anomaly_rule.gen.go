@@ -180,16 +180,28 @@ func anomalyRuleObservation(a *pgbeam.AnomalyRule) v1alpha1.AnomalyRuleAtProvide
 	return obs
 }
 func isAnomalyRuleUpToDate(fp v1alpha1.AnomalyRuleForProvider, a *pgbeam.AnomalyRule) bool {
+	if fp.CredentialID == nil && a.CredentialId != nil {
+		return false
+	}
 	if fp.CredentialID != nil && (a.CredentialId == nil || *fp.CredentialID != *a.CredentialId) {
 		return false
 	}
 	if fp.Metric != string(a.Metric) {
 		return false
 	}
+	if fp.SigmaThreshold == nil && a.SigmaThreshold != nil {
+		return false
+	}
 	if fp.SigmaThreshold != nil && (a.SigmaThreshold == nil || *fp.SigmaThreshold != *a.SigmaThreshold) {
 		return false
 	}
+	if fp.Floor == nil && a.Floor != nil {
+		return false
+	}
 	if fp.Floor != nil && (a.Floor == nil || *fp.Floor != *a.Floor) {
+		return false
+	}
+	if fp.Enabled == nil && !a.Enabled {
 		return false
 	}
 	if fp.Enabled != nil && (*fp.Enabled != a.Enabled) {

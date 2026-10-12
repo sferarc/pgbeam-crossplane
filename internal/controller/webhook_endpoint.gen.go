@@ -209,10 +209,16 @@ func isWebhookEndpointUpToDate(fp v1alpha1.WebhookEndpointForProvider, w *pgbeam
 	if fp.URL != w.Url {
 		return false
 	}
+	if fp.Format == "" && string(w.Format) != "json" {
+		return false
+	}
 	if fp.Format != "" {
 		if fp.Format != string(w.Format) {
 			return false
 		}
+	}
+	if fp.EventTypes == nil && w.EventTypes != nil && len(*w.EventTypes) != 0 {
+		return false
 	}
 	if fp.EventTypes != nil {
 		wTags := w.EventTypes
@@ -231,7 +237,13 @@ func isWebhookEndpointUpToDate(fp v1alpha1.WebhookEndpointForProvider, w *pgbeam
 			}
 		}
 	}
+	if fp.Enabled == nil && !w.Enabled {
+		return false
+	}
 	if fp.Enabled != nil && (*fp.Enabled != w.Enabled) {
+		return false
+	}
+	if fp.Description == nil && w.Description != nil && *w.Description != "" {
 		return false
 	}
 	if fp.Description != nil && (w.Description == nil || *fp.Description != *w.Description) {

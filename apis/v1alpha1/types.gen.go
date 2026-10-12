@@ -1475,3 +1475,89 @@ type AnomalyRuleList struct {
 	metav1.ListMeta `json:"metadata,omitempty"`
 	Items           []AnomalyRule `json:"items"`
 }
+
+// ============================================================================
+// ApprovalRule
+// ============================================================================
+
+// ApprovalRuleForProvider defines the desired state of a ApprovalRule.
+type ApprovalRuleForProvider struct {
+	// ProjectID is the project the rule belongs to.
+	// +kubebuilder:validation:Required
+	// +immutable
+	ProjectID string `json:"projectID"`
+
+	// Name is the label shown to the reviewer on every approval request this rule holds. unique within the project.
+	// +kubebuilder:validation:Required
+	Name string `json:"name"`
+
+	// StatementKinds is the statement kinds the rule holds. empty holds every kind.
+	// +optional
+	StatementKinds []string `json:"statementKinds,omitempty"`
+
+	// SchemaName is the schema the rule is scoped to. null matches every schema.
+	// +optional
+	SchemaName *string `json:"schemaName,omitempty"`
+
+	// RelationName is the relation the rule is scoped to. null matches every relation. without a schema it matches that name in every schema.
+	// +optional
+	RelationName *string `json:"relationName,omitempty"`
+
+	// MinAffectedRows is the hold only statements affecting at least this many rows. null holds every matching statement. a statement whose affected rows cannot be counted (ddl, a batch, a data-modifying cte) is held regardless.
+	// +optional
+	MinAffectedRows *int32 `json:"minAffectedRows,omitempty"`
+
+	// Enabled is the false switches the rule off, so it holds nothing.
+	// +optional
+	Enabled *bool `json:"enabled,omitempty"`
+}
+
+// ApprovalRuleAtProvider defines the observed state of a ApprovalRule.
+type ApprovalRuleAtProvider struct {
+	// ID is the PgBeam approval rule ID.
+	ID string `json:"id,omitempty"`
+
+	// CreatedAt is the when the rule was created.
+	CreatedAt string `json:"createdAt,omitempty"`
+
+	// UpdatedAt is the when the rule was last updated.
+	UpdatedAt string `json:"updatedAt,omitempty"`
+}
+
+// ApprovalRuleSpec defines the desired state of a ApprovalRule.
+type ApprovalRuleSpec struct {
+	xpv1.ResourceSpec `json:",inline"`
+	ForProvider       ApprovalRuleForProvider `json:"forProvider"`
+}
+
+// ApprovalRuleStatus defines the observed state of a ApprovalRule.
+type ApprovalRuleStatus struct {
+	xpv1.ResourceStatus `json:",inline"`
+	AtProvider          ApprovalRuleAtProvider `json:"atProvider,omitempty"`
+}
+
+// +kubebuilder:object:root=true
+// +kubebuilder:subresource:status
+// +kubebuilder:resource:scope=Cluster,categories=crossplane;managed;pgbeam
+// +kubebuilder:printcolumn:name="READY",type="string",JSONPath=".status.conditions[?(@.type=='Ready')].status"
+// +kubebuilder:printcolumn:name="SYNCED",type="string",JSONPath=".status.conditions[?(@.type=='Synced')].status"
+// +kubebuilder:printcolumn:name="EXTERNAL-NAME",type="string",JSONPath=".metadata.annotations.crossplane\\.io/external-name"
+// +kubebuilder:printcolumn:name="AGE",type="date",JSONPath=".metadata.creationTimestamp"
+
+// ApprovalRule is a managed resource that represents a PgBeam Approval Rule.
+type ApprovalRule struct {
+	metav1.TypeMeta   `json:",inline"`
+	metav1.ObjectMeta `json:"metadata,omitempty"`
+
+	Spec   ApprovalRuleSpec   `json:"spec"`
+	Status ApprovalRuleStatus `json:"status,omitempty"`
+}
+
+// +kubebuilder:object:root=true
+
+// ApprovalRuleList contains a list of ApprovalRules.
+type ApprovalRuleList struct {
+	metav1.TypeMeta `json:",inline"`
+	metav1.ListMeta `json:"metadata,omitempty"`
+	Items           []ApprovalRule `json:"items"`
+}

@@ -38,6 +38,7 @@ func init() {
 		&SelfHostEnrollment{}, &SelfHostEnrollmentList{},
 		&Honeytoken{}, &HoneytokenList{},
 		&AnomalyRule{}, &AnomalyRuleList{},
+		&ApprovalRule{}, &ApprovalRuleList{},
 		&ProviderConfig{}, &ProviderConfigList{},
 		&ProviderConfigUsage{}, &ProviderConfigUsageList{},
 	)
@@ -137,4 +138,12 @@ var (
 	AnomalyRuleGroupKind        = schema.GroupKind{Group: Group, Kind: AnomalyRuleKind}.String()
 	AnomalyRuleKindAPIVersion   = AnomalyRuleKind + "." + SchemeGroupVersion.String()
 	AnomalyRuleGroupVersionKind = SchemeGroupVersion.WithKind(AnomalyRuleKind)
+)
+
+// ApprovalRule type metadata.
+var (
+	ApprovalRuleKind             = reflect.TypeOf(ApprovalRule{}).Name()
+	ApprovalRuleGroupKind        = schema.GroupKind{Group: Group, Kind: ApprovalRuleKind}.String()
+	ApprovalRuleKindAPIVersion   = ApprovalRuleKind + "." + SchemeGroupVersion.String()
+	ApprovalRuleGroupVersionKind = SchemeGroupVersion.WithKind(ApprovalRuleKind)
 )

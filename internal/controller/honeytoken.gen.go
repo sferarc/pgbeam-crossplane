@@ -164,6 +164,9 @@ func honeytokenObservation(h *pgbeam.Honeytoken) v1alpha1.HoneytokenAtProvider {
 	return obs
 }
 func isHoneytokenUpToDate(fp v1alpha1.HoneytokenForProvider, h *pgbeam.Honeytoken) bool {
+	if fp.SchemaName == nil && h.SchemaName != nil {
+		return false
+	}
 	if fp.SchemaName != nil && (h.SchemaName == nil || *fp.SchemaName != *h.SchemaName) {
 		return false
 	}

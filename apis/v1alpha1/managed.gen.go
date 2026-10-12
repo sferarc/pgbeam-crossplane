@@ -605,3 +605,53 @@ func (ar *AnomalyRule) GetPublishConnectionDetailsTo() *xpv1.PublishConnectionDe
 func (ar *AnomalyRule) SetPublishConnectionDetailsTo(ref *xpv1.PublishConnectionDetailsTo) {
 	ar.Spec.PublishConnectionDetailsTo = ref
 }
+
+// Managed resource interface methods for ApprovalRule.
+
+func (ar *ApprovalRule) GetCondition(ct xpv1.ConditionType) xpv1.Condition {
+	return ar.Status.GetCondition(ct)
+}
+
+func (ar *ApprovalRule) SetConditions(c ...xpv1.Condition) {
+	ar.Status.SetConditions(c...)
+}
+
+func (ar *ApprovalRule) GetProviderConfigReference() *xpv1.Reference {
+	return ar.Spec.ProviderConfigReference
+}
+
+func (ar *ApprovalRule) SetProviderConfigReference(ref *xpv1.Reference) {
+	ar.Spec.ProviderConfigReference = ref
+}
+
+func (ar *ApprovalRule) GetDeletionPolicy() xpv1.DeletionPolicy {
+	return ar.Spec.DeletionPolicy
+}
+
+func (ar *ApprovalRule) SetDeletionPolicy(dp xpv1.DeletionPolicy) {
+	ar.Spec.DeletionPolicy = dp
+}
+
+func (ar *ApprovalRule) GetManagementPolicies() xpv1.ManagementPolicies {
+	return ar.Spec.ManagementPolicies
+}
+
+func (ar *ApprovalRule) SetManagementPolicies(mp xpv1.ManagementPolicies) {
+	ar.Spec.ManagementPolicies = mp
+}
+
+func (ar *ApprovalRule) GetWriteConnectionSecretToReference() *xpv1.SecretReference {
+	return ar.Spec.WriteConnectionSecretToReference
+}
+
+func (ar *ApprovalRule) SetWriteConnectionSecretToReference(ref *xpv1.SecretReference) {
+	ar.Spec.WriteConnectionSecretToReference = ref
+}
+
+func (ar *ApprovalRule) GetPublishConnectionDetailsTo() *xpv1.PublishConnectionDetailsTo {
+	return ar.Spec.PublishConnectionDetailsTo
+}
+
+func (ar *ApprovalRule) SetPublishConnectionDetailsTo(ref *xpv1.PublishConnectionDetailsTo) {
+	ar.Spec.PublishConnectionDetailsTo = ref
+}

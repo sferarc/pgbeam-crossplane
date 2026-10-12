@@ -23,6 +23,7 @@ func Setup(mgr ctrl.Manager, o controller.Options) error {
 		SetupSelfHostEnrollment,
 		SetupHoneytoken,
 		SetupAnomalyRule,
+		SetupApprovalRule,
 	} {
 		if err := setup(mgr, o); err != nil {
 			return err
