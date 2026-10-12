@@ -1,5 +1,12 @@
 # @pgbeam/crossplane
 
+## 0.1.3
+
+### Patch Changes
+
+- 60bb482: Removing an optional field from a manifest now clears it on the server. The up-to-date check used to skip omitted fields on resources updated by PUT (PolicyProfile, WebhookEndpoint, Honeytoken, AnomalyRule, ApprovalRule, SpendLimit, CacheRule), so the old value stayed and the resource reported Synced.
+- c1888e5: Release the AnomalyRule and ApprovalRule resources, which were added without a provider version bump.
+
 ## 0.1.2
 
 ### Patch Changes
