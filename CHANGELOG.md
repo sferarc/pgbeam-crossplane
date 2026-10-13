@@ -1,5 +1,11 @@
 # @pgbeam/crossplane
 
+## 0.1.4
+
+### Patch Changes
+
+- ef1df01: fix(deps): clear govulncheck with Go 1.26.9 and golang.org/x/net 0.60.0
+
 ## 0.1.3
 
 ### Patch Changes
