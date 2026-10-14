@@ -86,6 +86,10 @@ spec:
                 required:
                 - orgID
                 type: object
+                x-kubernetes-validations:
+                - message: orgID is immutable; delete and recreate the resource to
+                    change it
+                  rule: self.orgID == oldSelf.orgID
               managementPolicies:
                 default:
                 - '*'

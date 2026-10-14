@@ -104,6 +104,16 @@ spec:
                 - projectID
                 - queryHash
                 type: object
+                x-kubernetes-validations:
+                - message: queryHash is immutable; delete and recreate the resource
+                    to change it
+                  rule: self.queryHash == oldSelf.queryHash
+                - message: databaseID is immutable; delete and recreate the resource
+                    to change it
+                  rule: self.databaseID == oldSelf.databaseID
+                - message: projectID is immutable; delete and recreate the resource
+                    to change it
+                  rule: self.projectID == oldSelf.projectID
               managementPolicies:
                 default:
                 - '*'

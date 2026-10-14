@@ -316,6 +316,21 @@ spec:
                 - name
                 - orgID
                 type: object
+                x-kubernetes-validations:
+                - message: orgID is immutable; delete and recreate the resource to
+                    change it
+                  rule: self.orgID == oldSelf.orgID
+                - message: cloud is immutable; delete and recreate the resource to
+                    change it
+                  rule: has(self.cloud) == has(oldSelf.cloud) && (!has(self.cloud)
+                    || self.cloud == oldSelf.cloud)
+                - message: selfHosted is immutable; delete and recreate the resource
+                    to change it
+                  rule: has(self.selfHosted) == has(oldSelf.selfHosted) && (!has(self.selfHosted)
+                    || self.selfHosted == oldSelf.selfHosted)
+                - message: database is immutable; delete and recreate the resource
+                    to change it
+                  rule: self.database == oldSelf.database
               managementPolicies:
                 default:
                 - '*'

@@ -36,7 +36,7 @@ spec:
       openAPIV3Schema:
         description: |-
           SelfHostEnrollment is a managed resource that represents a PgBeam Self Host Enrollment.
-          All fields are immutable; any change triggers recreation.
+          All fields are immutable; the API server rejects changes, so delete and recreate it instead.
         properties:
           apiVersion:
             description: |-
@@ -95,6 +95,22 @@ spec:
                 required:
                 - orgID
                 type: object
+                x-kubernetes-validations:
+                - message: orgID is immutable; delete and recreate the resource to
+                    change it
+                  rule: self.orgID == oldSelf.orgID
+                - message: regionLabel is immutable; delete and recreate the resource
+                    to change it
+                  rule: has(self.regionLabel) == has(oldSelf.regionLabel) && (!has(self.regionLabel)
+                    || self.regionLabel == oldSelf.regionLabel)
+                - message: description is immutable; delete and recreate the resource
+                    to change it
+                  rule: has(self.description) == has(oldSelf.description) && (!has(self.description)
+                    || self.description == oldSelf.description)
+                - message: expiresAt is immutable; delete and recreate the resource
+                    to change it
+                  rule: has(self.expiresAt) == has(oldSelf.expiresAt) && (!has(self.expiresAt)
+                    || self.expiresAt == oldSelf.expiresAt)
               managementPolicies:
                 default:
                 - '*'

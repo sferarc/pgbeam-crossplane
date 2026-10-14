@@ -239,7 +239,11 @@ type ProjectAtProvider struct {
 // ProjectSpec defines the desired state of a Project.
 type ProjectSpec struct {
 	xpv1.ResourceSpec `json:",inline"`
-	ForProvider       ProjectForProvider `json:"forProvider"`
+	// +kubebuilder:validation:XValidation:rule="self.orgID == oldSelf.orgID",message="orgID is immutable; delete and recreate the resource to change it"
+	// +kubebuilder:validation:XValidation:rule="has(self.cloud) == has(oldSelf.cloud) && (!has(self.cloud) || self.cloud == oldSelf.cloud)",message="cloud is immutable; delete and recreate the resource to change it"
+	// +kubebuilder:validation:XValidation:rule="has(self.selfHosted) == has(oldSelf.selfHosted) && (!has(self.selfHosted) || self.selfHosted == oldSelf.selfHosted)",message="selfHosted is immutable; delete and recreate the resource to change it"
+	// +kubebuilder:validation:XValidation:rule="self.database == oldSelf.database",message="database is immutable; delete and recreate the resource to change it"
+	ForProvider ProjectForProvider `json:"forProvider"`
 }
 
 // ProjectStatus defines the observed state of a Project.
@@ -361,7 +365,8 @@ type DatabaseAtProvider struct {
 // DatabaseSpec defines the desired state of a Database.
 type DatabaseSpec struct {
 	xpv1.ResourceSpec `json:",inline"`
-	ForProvider       DatabaseForProvider `json:"forProvider"`
+	// +kubebuilder:validation:XValidation:rule="self.projectID == oldSelf.projectID",message="projectID is immutable; delete and recreate the resource to change it"
+	ForProvider DatabaseForProvider `json:"forProvider"`
 }
 
 // DatabaseStatus defines the observed state of a Database.
@@ -441,7 +446,11 @@ type ReplicaAtProvider struct {
 // ReplicaSpec defines the desired state of a Replica.
 type ReplicaSpec struct {
 	xpv1.ResourceSpec `json:",inline"`
-	ForProvider       ReplicaForProvider `json:"forProvider"`
+	// +kubebuilder:validation:XValidation:rule="self.databaseID == oldSelf.databaseID",message="databaseID is immutable; delete and recreate the resource to change it"
+	// +kubebuilder:validation:XValidation:rule="self.host == oldSelf.host",message="host is immutable; delete and recreate the resource to change it"
+	// +kubebuilder:validation:XValidation:rule="self.port == oldSelf.port",message="port is immutable; delete and recreate the resource to change it"
+	// +kubebuilder:validation:XValidation:rule="has(self.sslMode) == has(oldSelf.sslMode) && (!has(self.sslMode) || self.sslMode == oldSelf.sslMode)",message="sslMode is immutable; delete and recreate the resource to change it"
+	ForProvider ReplicaForProvider `json:"forProvider"`
 }
 
 // ReplicaStatus defines the observed state of a Replica.
@@ -459,7 +468,7 @@ type ReplicaStatus struct {
 // +kubebuilder:printcolumn:name="AGE",type="date",JSONPath=".metadata.creationTimestamp"
 
 // Replica is a managed resource that represents a PgBeam Replica.
-// All fields are immutable; any change triggers recreation.
+// All fields are immutable; the API server rejects changes, so delete and recreate it instead.
 type Replica struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
@@ -546,7 +555,9 @@ type CustomDomainAtProvider struct {
 // CustomDomainSpec defines the desired state of a CustomDomain.
 type CustomDomainSpec struct {
 	xpv1.ResourceSpec `json:",inline"`
-	ForProvider       CustomDomainForProvider `json:"forProvider"`
+	// +kubebuilder:validation:XValidation:rule="self.projectID == oldSelf.projectID",message="projectID is immutable; delete and recreate the resource to change it"
+	// +kubebuilder:validation:XValidation:rule="self.domain == oldSelf.domain",message="domain is immutable; delete and recreate the resource to change it"
+	ForProvider CustomDomainForProvider `json:"forProvider"`
 }
 
 // CustomDomainStatus defines the observed state of a CustomDomain.
@@ -564,7 +575,7 @@ type CustomDomainStatus struct {
 // +kubebuilder:printcolumn:name="AGE",type="date",JSONPath=".metadata.creationTimestamp"
 
 // CustomDomain is a managed resource that represents a PgBeam Custom Domain.
-// All fields are immutable; any change triggers recreation.
+// All fields are immutable; the API server rejects changes, so delete and recreate it instead.
 type CustomDomain struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
@@ -660,7 +671,10 @@ type CacheRuleAtProvider struct {
 // CacheRuleSpec defines the desired state of a CacheRule.
 type CacheRuleSpec struct {
 	xpv1.ResourceSpec `json:",inline"`
-	ForProvider       CacheRuleForProvider `json:"forProvider"`
+	// +kubebuilder:validation:XValidation:rule="self.queryHash == oldSelf.queryHash",message="queryHash is immutable; delete and recreate the resource to change it"
+	// +kubebuilder:validation:XValidation:rule="self.databaseID == oldSelf.databaseID",message="databaseID is immutable; delete and recreate the resource to change it"
+	// +kubebuilder:validation:XValidation:rule="self.projectID == oldSelf.projectID",message="projectID is immutable; delete and recreate the resource to change it"
+	ForProvider CacheRuleForProvider `json:"forProvider"`
 }
 
 // CacheRuleStatus defines the observed state of a CacheRule.
@@ -803,7 +817,8 @@ type SpendLimitAtProvider struct {
 // SpendLimitSpec defines the desired state of a SpendLimit.
 type SpendLimitSpec struct {
 	xpv1.ResourceSpec `json:",inline"`
-	ForProvider       SpendLimitForProvider `json:"forProvider"`
+	// +kubebuilder:validation:XValidation:rule="self.orgID == oldSelf.orgID",message="orgID is immutable; delete and recreate the resource to change it"
+	ForProvider SpendLimitForProvider `json:"forProvider"`
 }
 
 // SpendLimitStatus defines the observed state of a SpendLimit.
@@ -905,7 +920,12 @@ type AgentCredentialAtProvider struct {
 // AgentCredentialSpec defines the desired state of a AgentCredential.
 type AgentCredentialSpec struct {
 	xpv1.ResourceSpec `json:",inline"`
-	ForProvider       AgentCredentialForProvider `json:"forProvider"`
+	// +kubebuilder:validation:XValidation:rule="self.projectID == oldSelf.projectID",message="projectID is immutable; delete and recreate the resource to change it"
+	// +kubebuilder:validation:XValidation:rule="self.policyProfileID == oldSelf.policyProfileID",message="policyProfileID is immutable; delete and recreate the resource to change it"
+	// +kubebuilder:validation:XValidation:rule="self.name == oldSelf.name",message="name is immutable; delete and recreate the resource to change it"
+	// +kubebuilder:validation:XValidation:rule="has(self.principalType) == has(oldSelf.principalType) && (!has(self.principalType) || self.principalType == oldSelf.principalType)",message="principalType is immutable; delete and recreate the resource to change it"
+	// +kubebuilder:validation:XValidation:rule="has(self.expiresAt) == has(oldSelf.expiresAt) && (!has(self.expiresAt) || self.expiresAt == oldSelf.expiresAt)",message="expiresAt is immutable; delete and recreate the resource to change it"
+	ForProvider AgentCredentialForProvider `json:"forProvider"`
 }
 
 // AgentCredentialStatus defines the observed state of a AgentCredential.
@@ -1111,7 +1131,8 @@ type PolicyProfileAtProvider struct {
 // PolicyProfileSpec defines the desired state of a PolicyProfile.
 type PolicyProfileSpec struct {
 	xpv1.ResourceSpec `json:",inline"`
-	ForProvider       PolicyProfileForProvider `json:"forProvider"`
+	// +kubebuilder:validation:XValidation:rule="self.projectID == oldSelf.projectID",message="projectID is immutable; delete and recreate the resource to change it"
+	ForProvider PolicyProfileForProvider `json:"forProvider"`
 }
 
 // PolicyProfileStatus defines the observed state of a PolicyProfile.
@@ -1199,7 +1220,8 @@ type WebhookEndpointAtProvider struct {
 // WebhookEndpointSpec defines the desired state of a WebhookEndpoint.
 type WebhookEndpointSpec struct {
 	xpv1.ResourceSpec `json:",inline"`
-	ForProvider       WebhookEndpointForProvider `json:"forProvider"`
+	// +kubebuilder:validation:XValidation:rule="self.projectID == oldSelf.projectID",message="projectID is immutable; delete and recreate the resource to change it"
+	ForProvider WebhookEndpointForProvider `json:"forProvider"`
 }
 
 // WebhookEndpointStatus defines the observed state of a WebhookEndpoint.
@@ -1282,7 +1304,11 @@ type SelfHostEnrollmentAtProvider struct {
 // SelfHostEnrollmentSpec defines the desired state of a SelfHostEnrollment.
 type SelfHostEnrollmentSpec struct {
 	xpv1.ResourceSpec `json:",inline"`
-	ForProvider       SelfHostEnrollmentForProvider `json:"forProvider"`
+	// +kubebuilder:validation:XValidation:rule="self.orgID == oldSelf.orgID",message="orgID is immutable; delete and recreate the resource to change it"
+	// +kubebuilder:validation:XValidation:rule="has(self.regionLabel) == has(oldSelf.regionLabel) && (!has(self.regionLabel) || self.regionLabel == oldSelf.regionLabel)",message="regionLabel is immutable; delete and recreate the resource to change it"
+	// +kubebuilder:validation:XValidation:rule="has(self.description) == has(oldSelf.description) && (!has(self.description) || self.description == oldSelf.description)",message="description is immutable; delete and recreate the resource to change it"
+	// +kubebuilder:validation:XValidation:rule="has(self.expiresAt) == has(oldSelf.expiresAt) && (!has(self.expiresAt) || self.expiresAt == oldSelf.expiresAt)",message="expiresAt is immutable; delete and recreate the resource to change it"
+	ForProvider SelfHostEnrollmentForProvider `json:"forProvider"`
 }
 
 // SelfHostEnrollmentStatus defines the observed state of a SelfHostEnrollment.
@@ -1300,7 +1326,7 @@ type SelfHostEnrollmentStatus struct {
 // +kubebuilder:printcolumn:name="AGE",type="date",JSONPath=".metadata.creationTimestamp"
 
 // SelfHostEnrollment is a managed resource that represents a PgBeam Self Host Enrollment.
-// All fields are immutable; any change triggers recreation.
+// All fields are immutable; the API server rejects changes, so delete and recreate it instead.
 type SelfHostEnrollment struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
@@ -1358,7 +1384,8 @@ type HoneytokenAtProvider struct {
 // HoneytokenSpec defines the desired state of a Honeytoken.
 type HoneytokenSpec struct {
 	xpv1.ResourceSpec `json:",inline"`
-	ForProvider       HoneytokenForProvider `json:"forProvider"`
+	// +kubebuilder:validation:XValidation:rule="self.projectID == oldSelf.projectID",message="projectID is immutable; delete and recreate the resource to change it"
+	ForProvider HoneytokenForProvider `json:"forProvider"`
 }
 
 // HoneytokenStatus defines the observed state of a Honeytoken.
@@ -1441,7 +1468,8 @@ type AnomalyRuleAtProvider struct {
 // AnomalyRuleSpec defines the desired state of a AnomalyRule.
 type AnomalyRuleSpec struct {
 	xpv1.ResourceSpec `json:",inline"`
-	ForProvider       AnomalyRuleForProvider `json:"forProvider"`
+	// +kubebuilder:validation:XValidation:rule="self.projectID == oldSelf.projectID",message="projectID is immutable; delete and recreate the resource to change it"
+	ForProvider AnomalyRuleForProvider `json:"forProvider"`
 }
 
 // AnomalyRuleStatus defines the observed state of a AnomalyRule.
@@ -1527,7 +1555,8 @@ type ApprovalRuleAtProvider struct {
 // ApprovalRuleSpec defines the desired state of a ApprovalRule.
 type ApprovalRuleSpec struct {
 	xpv1.ResourceSpec `json:",inline"`
-	ForProvider       ApprovalRuleForProvider `json:"forProvider"`
+	// +kubebuilder:validation:XValidation:rule="self.projectID == oldSelf.projectID",message="projectID is immutable; delete and recreate the resource to change it"
+	ForProvider ApprovalRuleForProvider `json:"forProvider"`
 }
 
 // ApprovalRuleStatus defines the observed state of a ApprovalRule.

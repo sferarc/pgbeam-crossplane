@@ -36,7 +36,7 @@ spec:
       openAPIV3Schema:
         description: |-
           CustomDomain is a managed resource that represents a PgBeam Custom Domain.
-          All fields are immutable; any change triggers recreation.
+          All fields are immutable; the API server rejects changes, so delete and recreate it instead.
         properties:
           apiVersion:
             description: |-
@@ -86,6 +86,13 @@ spec:
                 - domain
                 - projectID
                 type: object
+                x-kubernetes-validations:
+                - message: projectID is immutable; delete and recreate the resource
+                    to change it
+                  rule: self.projectID == oldSelf.projectID
+                - message: domain is immutable; delete and recreate the resource to
+                    change it
+                  rule: self.domain == oldSelf.domain
               managementPolicies:
                 default:
                 - '*'

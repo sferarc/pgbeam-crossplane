@@ -112,6 +112,10 @@ spec:
                 - name
                 - projectID
                 type: object
+                x-kubernetes-validations:
+                - message: projectID is immutable; delete and recreate the resource
+                    to change it
+                  rule: self.projectID == oldSelf.projectID
               managementPolicies:
                 default:
                 - '*'
