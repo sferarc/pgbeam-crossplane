@@ -3,6 +3,7 @@ package controller
 import (
 	"context"
 	"fmt"
+	"strings"
 
 	xpv1 "github.com/crossplane/crossplane-runtime/apis/common/v1"
 	"github.com/crossplane/crossplane-runtime/pkg/resource"
@@ -41,7 +42,7 @@ func (c *connector) getClient(ctx context.Context, mg resource.Managed) (*pgbeam
 		return nil, fmt.Errorf("%s: %w", errGetProviderConfig, err)
 	}
 
-	apiKey, err := c.getSecretValue(ctx, pc.Spec.APIKeySecretRef)
+	apiKey, err := c.getAPIKey(ctx, pc.Spec.APIKeySecretRef)
 	if err != nil {
 		return nil, fmt.Errorf("%s: %w", errGetAPIKeySecret, err)
 	}
@@ -50,6 +51,21 @@ func (c *connector) getClient(ctx context.Context, mg resource.Managed) (*pgbeam
 		APIKey:  apiKey,
 		BaseURL: pc.Spec.BaseURL,
 	}), nil
+}
+
+// getAPIKey reads the API key and strips surrounding whitespace, since secrets
+// created from a file or with a plain echo carry a trailing newline that
+// net/http rejects in the Authorization header.
+func (c *connector) getAPIKey(ctx context.Context, ref xpv1.SecretKeySelector) (string, error) {
+	val, err := c.getSecretValue(ctx, ref)
+	if err != nil {
+		return "", err
+	}
+	key := strings.TrimSpace(val)
+	if key == "" {
+		return "", fmt.Errorf("key %q in secret %s/%s is empty", ref.Key, ref.Namespace, ref.Name)
+	}
+	return key, nil
 }
 
 // getSecretValue reads a secret key selector and returns the value as a string.

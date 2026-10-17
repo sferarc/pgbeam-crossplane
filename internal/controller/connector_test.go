@@ -3,6 +3,9 @@ package controller
 import (
 	"context"
 	"errors"
+	"net/http"
+	"net/http/httptest"
+	"strings"
 	"testing"
 
 	xpv1 "github.com/crossplane/crossplane-runtime/apis/common/v1"
@@ -169,5 +172,113 @@ func TestGetClient_TrackerError(t *testing.T) {
 	}
 	if !errors.Is(err, sentinel) {
 		t.Errorf("error = %v, want wrapped %v", err, sentinel)
+	}
+}
+
+func providerConfigFixture(baseURL string) *v1alpha1.ProviderConfig {
+	return &v1alpha1.ProviderConfig{
+		ObjectMeta: metav1.ObjectMeta{Name: "default"},
+		Spec: v1alpha1.ProviderConfigSpec{
+			APIKeySecretRef: secretRef("crossplane-system", "pgbeam-creds", "apiKey"),
+			BaseURL:         baseURL,
+		},
+	}
+}
+
+func managedWithDefaultConfig() *v1alpha1.Project {
+	mg := &v1alpha1.Project{}
+	mg.SetProviderConfigReference(&xpv1.Reference{Name: "default"})
+	return mg
+}
+
+func TestGetClient_TrimsAPIKeyWhitespace(t *testing.T) {
+	t.Parallel()
+
+	authHeaders := make(chan string, 1)
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		select {
+		case authHeaders <- r.Header.Get("Authorization"):
+		default:
+		}
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = w.Write([]byte(`{"id":"prj_1","name":"p"}`))
+	}))
+	t.Cleanup(srv.Close)
+
+	kube := fake.NewClientBuilder().WithScheme(newTestScheme(t)).
+		WithObjects(providerConfigFixture(srv.URL), apiKeySecret("crossplane-system", "pgbeam-creds", "apiKey", "pgb_secret\n")).
+		Build()
+	c := &connector{kube: kube, usage: noopTracker()}
+
+	client, err := c.getClient(context.Background(), managedWithDefaultConfig())
+	if err != nil {
+		t.Fatalf("getClient: %v", err)
+	}
+	if _, err := client.Projects.GetProject(context.Background(), "prj_1"); err != nil {
+		t.Fatalf("GetProject: %v", err)
+	}
+	if got := <-authHeaders; got != "Bearer pgb_secret" {
+		t.Errorf("Authorization = %q, want %q", got, "Bearer pgb_secret")
+	}
+}
+
+func TestGetClient_EmptyAPIKey(t *testing.T) {
+	t.Parallel()
+
+	for name, value := range map[string]string{"empty": "", "whitespace": " \n"} {
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+
+			kube := fake.NewClientBuilder().WithScheme(newTestScheme(t)).
+				WithObjects(providerConfigFixture(""), apiKeySecret("crossplane-system", "pgbeam-creds", "apiKey", value)).
+				Build()
+			c := &connector{kube: kube, usage: noopTracker()}
+
+			_, err := c.getClient(context.Background(), managedWithDefaultConfig())
+			if err == nil {
+				t.Fatal("expected error for empty API key")
+			}
+			for _, want := range []string{errGetAPIKeySecret, "crossplane-system/pgbeam-creds", `"apiKey"`, "empty"} {
+				if !strings.Contains(err.Error(), want) {
+					t.Errorf("error %q does not mention %q", err, want)
+				}
+			}
+		})
+	}
+}
+
+func TestGetClient_MissingAPIKey(t *testing.T) {
+	t.Parallel()
+
+	kube := fake.NewClientBuilder().WithScheme(newTestScheme(t)).
+		WithObjects(providerConfigFixture(""), apiKeySecret("crossplane-system", "pgbeam-creds", "otherKey", "pgb_secret")).
+		Build()
+	c := &connector{kube: kube, usage: noopTracker()}
+
+	_, err := c.getClient(context.Background(), managedWithDefaultConfig())
+	if err == nil {
+		t.Fatal("expected error for missing API key")
+	}
+	for _, want := range []string{errGetAPIKeySecret, "crossplane-system/pgbeam-creds", `"apiKey"`} {
+		if !strings.Contains(err.Error(), want) {
+			t.Errorf("error %q does not mention %q", err, want)
+		}
+	}
+}
+
+func TestGetSecretValue_PreservesWhitespace(t *testing.T) {
+	t.Parallel()
+
+	kube := fake.NewClientBuilder().WithScheme(newTestScheme(t)).
+		WithObjects(apiKeySecret("crossplane-system", "db", "password", " p@ss \n")).
+		Build()
+	c := &connector{kube: kube, usage: noopTracker()}
+
+	val, err := c.getSecretValue(context.Background(), secretRef("crossplane-system", "db", "password"))
+	if err != nil {
+		t.Fatalf("getSecretValue: %v", err)
+	}
+	if val != " p@ss \n" {
+		t.Errorf("value = %q, want it unchanged", val)
 	}
 }

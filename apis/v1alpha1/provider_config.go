@@ -12,7 +12,7 @@ import (
 // ProviderConfigSpec defines the desired state of the provider configuration.
 type ProviderConfigSpec struct {
 	// APIKeySecretRef is a reference to a Secret containing the PgBeam API key.
-	// The key must be stored under the "apiKey" data field.
+	// The API key is read from the Secret data key named by key.
 	// +kubebuilder:validation:Required
 	APIKeySecretRef xpv1.SecretKeySelector `json:"apiKeySecretRef"`
 

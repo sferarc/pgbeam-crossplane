@@ -24,7 +24,7 @@ const (
 	errWebhookEndpointUpdate   = "cannot update WebhookEndpoint"
 	errWebhookEndpointDelete   = "cannot delete WebhookEndpoint"
 	errWebhookEndpointObserve  = "cannot observe WebhookEndpoint"
-	errWebhookEndpointPassword = "cannot read database password"
+	errWebhookEndpointPassword = "cannot read webhook signing secret"
 )
 
 func SetupWebhookEndpoint(mgr ctrl.Manager, o controller.Options) error {

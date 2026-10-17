@@ -50,7 +50,7 @@ spec:
               apiKeySecretRef:
                 description: |-
                   APIKeySecretRef is a reference to a Secret containing the PgBeam API key.
-                  The key must be stored under the "apiKey" data field.
+                  The API key is read from the Secret data key named by key.
                 properties:
                   key:
                     description: The key to select.
