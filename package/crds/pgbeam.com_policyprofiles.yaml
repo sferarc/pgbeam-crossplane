@@ -225,6 +225,22 @@ spec:
                   projectID:
                     description: ProjectID is the owning project id.
                     type: string
+                  queryMode:
+                    default: sql
+                    description: 'QueryMode is the what an agent on this profile may
+                      send. sql admits any statement the rest of the profile allows.
+                      templates admits only the project''s enabled query templates
+                      (matched on the parse tree, so spelling and literals in the
+                      template''s own text count), and refuses everything else with
+                      sqlstate 42501 and decision rule template_required, mcp query
+                      included. a matched template still meets every other rule on
+                      this profile: a template narrows what an agent can run and never
+                      grants access. the hosted mcp discovery tools (list_tables,
+                      describe_table, schema_catalog) keep working under templates.'
+                    enum:
+                    - sql
+                    - templates
+                    type: string
                   rowFilters:
                     description: RowFilters is the per-relation row filters anded
                       into agent reads.

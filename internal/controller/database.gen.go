@@ -191,7 +191,7 @@ func (e *databaseExternal) Update(ctx context.Context, mg resource.Managed) (man
 		req.Username = &fp.Username
 		needsUpdate = true
 	}
-	if fp.SSLMode != string(database.SslMode) {
+	if fp.SSLMode != "" && fp.SSLMode != string(database.SslMode) {
 		v := pgbeam.SSLMode(fp.SSLMode)
 		req.SslMode = &v
 		needsUpdate = true
@@ -329,7 +329,7 @@ func isDatabaseUpToDate(fp v1alpha1.DatabaseForProvider, d *pgbeam.Database) boo
 		if pgbeam.PoolMode(fp.PoolConfig.PoolMode) != d.PoolConfig.PoolMode {
 			return false
 		}
-		if d.PoolConfig.MaxActive == nil || *fp.PoolConfig.MaxActive != *d.PoolConfig.MaxActive {
+		if fp.PoolConfig.MaxActive != nil && (d.PoolConfig.MaxActive == nil || *fp.PoolConfig.MaxActive != *d.PoolConfig.MaxActive) {
 			return false
 		}
 	}

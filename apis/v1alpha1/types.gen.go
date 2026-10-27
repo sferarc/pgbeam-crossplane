@@ -1114,6 +1114,12 @@ type PolicyProfileForProvider struct {
 	// +kubebuilder:default=0
 	// +kubebuilder:validation:Minimum=0
 	ContentScanMaxBytes *int64 `json:"contentScanMaxBytes,omitempty"`
+
+	// QueryMode is the what an agent on this profile may send. sql admits any statement the rest of the profile allows. templates admits only the project's enabled query templates (matched on the parse tree, so spelling and literals in the template's own text count), and refuses everything else with sqlstate 42501 and decision rule template_required, mcp query included. a matched template still meets every other rule on this profile: a template narrows what an agent can run and never grants access. the hosted mcp discovery tools (list_tables, describe_table, schema_catalog) keep working under templates.
+	// +optional
+	// +kubebuilder:validation:Enum=sql;templates
+	// +kubebuilder:default=sql
+	QueryMode string `json:"queryMode,omitempty"`
 }
 
 // PolicyProfileAtProvider defines the observed state of a PolicyProfile.
@@ -1589,4 +1595,111 @@ type ApprovalRuleList struct {
 	metav1.TypeMeta `json:",inline"`
 	metav1.ListMeta `json:"metadata,omitempty"`
 	Items           []ApprovalRule `json:"items"`
+}
+
+// ============================================================================
+// QueryTemplate
+// ============================================================================
+
+// QueryTemplateParamParameters is one entry of declared parameters, in placeholder order.
+type QueryTemplateParamParameters struct {
+
+	// Name is the parameter name, a lower-case identifier. unique within the template. an agent passes the argument under this name.
+	// +kubebuilder:validation:Required
+	Name string `json:"name"`
+
+	// Type is the the postgres type a template parameter is declared as. an argument is checked against it and bound as a value of that type, never as sql.
+	// +kubebuilder:validation:Required
+	// +kubebuilder:validation:Enum=text;integer;bigint;double precision;numeric;boolean;uuid;date;timestamptz;jsonb
+	Type string `json:"type"`
+
+	// Nullable is the true lets the argument be omitted or null, which binds sql null. a parameter that is not nullable must be given a value.
+	// +optional
+	Nullable *bool `json:"nullable,omitempty"`
+}
+
+// QueryTemplateForProvider defines the desired state of a QueryTemplate.
+type QueryTemplateForProvider struct {
+	// ProjectID is the project the template belongs to.
+	// +kubebuilder:validation:Required
+	// +immutable
+	ProjectID string `json:"projectID"`
+
+	// Name is the name an agent invokes the template by. a lower-case identifier, unique within the project.
+	// +kubebuilder:validation:Required
+	Name string `json:"name"`
+
+	// Description is the what the template is for, shown to an agent that lists the templates.
+	// +optional
+	Description *string `json:"description,omitempty"`
+
+	// SQL is the the statement, with its parameters as $1, $2 and so on. exactly one select, insert, update or delete. matched on its parse tree, so whitespace, keyword case and comments do not matter and anything else does.
+	// +kubebuilder:validation:Required
+	SQL string `json:"sql"`
+
+	// Params is the declared parameters, in placeholder order.
+	// +optional
+	Params []QueryTemplateParamParameters `json:"params,omitempty"`
+
+	// IncludeSQL is the true shows the sql text to an agent that lists the templates. false shows only the name, description and parameters.
+	// +optional
+	IncludeSQL *bool `json:"includeSQL,omitempty"`
+
+	// Enabled is the false withdraws the template, so it admits nothing.
+	// +optional
+	Enabled *bool `json:"enabled,omitempty"`
+}
+
+// QueryTemplateAtProvider defines the observed state of a QueryTemplate.
+type QueryTemplateAtProvider struct {
+	// ID is the PgBeam query template ID.
+	ID string `json:"id,omitempty"`
+
+	// StatementKind is the the statement kind a template compiles to. absent on a stored template that no longer compiles, which a data plane skips rather than admits.
+	StatementKind string `json:"statementKind,omitempty"`
+
+	// CreatedAt is the when the template was created.
+	CreatedAt string `json:"createdAt,omitempty"`
+
+	// UpdatedAt is the when the template was last updated.
+	UpdatedAt string `json:"updatedAt,omitempty"`
+}
+
+// QueryTemplateSpec defines the desired state of a QueryTemplate.
+type QueryTemplateSpec struct {
+	xpv1.ResourceSpec `json:",inline"`
+	// +kubebuilder:validation:XValidation:rule="self.projectID == oldSelf.projectID",message="projectID is immutable; delete and recreate the resource to change it"
+	ForProvider QueryTemplateForProvider `json:"forProvider"`
+}
+
+// QueryTemplateStatus defines the observed state of a QueryTemplate.
+type QueryTemplateStatus struct {
+	xpv1.ResourceStatus `json:",inline"`
+	AtProvider          QueryTemplateAtProvider `json:"atProvider,omitempty"`
+}
+
+// +kubebuilder:object:root=true
+// +kubebuilder:subresource:status
+// +kubebuilder:resource:scope=Cluster,categories=crossplane;managed;pgbeam
+// +kubebuilder:printcolumn:name="READY",type="string",JSONPath=".status.conditions[?(@.type=='Ready')].status"
+// +kubebuilder:printcolumn:name="SYNCED",type="string",JSONPath=".status.conditions[?(@.type=='Synced')].status"
+// +kubebuilder:printcolumn:name="EXTERNAL-NAME",type="string",JSONPath=".metadata.annotations.crossplane\\.io/external-name"
+// +kubebuilder:printcolumn:name="AGE",type="date",JSONPath=".metadata.creationTimestamp"
+
+// QueryTemplate is a managed resource that represents a PgBeam Query Template.
+type QueryTemplate struct {
+	metav1.TypeMeta   `json:",inline"`
+	metav1.ObjectMeta `json:"metadata,omitempty"`
+
+	Spec   QueryTemplateSpec   `json:"spec"`
+	Status QueryTemplateStatus `json:"status,omitempty"`
+}
+
+// +kubebuilder:object:root=true
+
+// QueryTemplateList contains a list of QueryTemplates.
+type QueryTemplateList struct {
+	metav1.TypeMeta `json:",inline"`
+	metav1.ListMeta `json:"metadata,omitempty"`
+	Items           []QueryTemplate `json:"items"`
 }

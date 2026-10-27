@@ -170,6 +170,10 @@ func (e *policyProfileExternal) Create(ctx context.Context, mg resource.Managed)
 	if fp.ContentScanMaxBytes != nil {
 		req.ContentScanMaxBytes = fp.ContentScanMaxBytes
 	}
+	if fp.QueryMode != "" {
+		v := pgbeam.PolicyProfileInputQueryMode(fp.QueryMode)
+		req.QueryMode = &v
+	}
 	if fp.StatementRules != nil {
 		req.StatementRules = &pgbeam.StatementRules{
 			Allow: fp.StatementRules.Allow,
@@ -277,6 +281,10 @@ func (e *policyProfileExternal) Update(ctx context.Context, mg resource.Managed)
 	}
 	if fp.ContentScanMaxBytes != nil {
 		req.ContentScanMaxBytes = fp.ContentScanMaxBytes
+	}
+	if fp.QueryMode != "" {
+		v := pgbeam.PolicyProfileInputQueryMode(fp.QueryMode)
+		req.QueryMode = &v
 	}
 	if fp.StatementRules != nil {
 		req.StatementRules = &pgbeam.StatementRules{
@@ -485,14 +493,26 @@ func isPolicyProfileUpToDate(fp v1alpha1.PolicyProfileForProvider, p *pgbeam.Pol
 	if fp.ContentScanMaxBytes != nil && (p.ContentScanMaxBytes == nil || *fp.ContentScanMaxBytes != *p.ContentScanMaxBytes) {
 		return false
 	}
+	if fp.QueryMode == "" && string(p.QueryMode) != "sql" {
+		return false
+	}
+	if fp.QueryMode != "" {
+		if fp.QueryMode != string(p.QueryMode) {
+			return false
+		}
+	}
 	if fp.StatementRules == nil && p.StatementRules != nil {
 		return false
 	}
 	if fp.StatementRules != nil {
-		if !reflect.DeepEqual(fp.StatementRules.Allow, p.StatementRules.Allow) {
+		pStatementRules := p.StatementRules
+		if pStatementRules == nil {
+			pStatementRules = &pgbeam.StatementRules{}
+		}
+		if !reflect.DeepEqual(fp.StatementRules.Allow, pStatementRules.Allow) {
 			return false
 		}
-		if !reflect.DeepEqual(fp.StatementRules.Deny, p.StatementRules.Deny) {
+		if !reflect.DeepEqual(fp.StatementRules.Deny, pStatementRules.Deny) {
 			return false
 		}
 	}

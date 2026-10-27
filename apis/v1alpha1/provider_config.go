@@ -63,19 +63,19 @@ type ProviderConfigUsageList struct {
 // ProviderConfigUsage interface methods.
 
 func (p *ProviderConfigUsage) GetProviderConfigReference() xpv1.Reference {
-	return p.ProviderConfigUsage.ProviderConfigReference
+	return p.ProviderConfigReference
 }
 
 func (p *ProviderConfigUsage) SetProviderConfigReference(r xpv1.Reference) {
-	p.ProviderConfigUsage.ProviderConfigReference = r
+	p.ProviderConfigReference = r
 }
 
 func (p *ProviderConfigUsage) SetResourceReference(r xpv1.TypedReference) {
-	p.ProviderConfigUsage.ResourceReference = r
+	p.ResourceReference = r
 }
 
 func (p *ProviderConfigUsage) GetResourceReference() xpv1.TypedReference {
-	return p.ProviderConfigUsage.ResourceReference
+	return p.ResourceReference
 }
 
 // ProviderConfig interface methods.

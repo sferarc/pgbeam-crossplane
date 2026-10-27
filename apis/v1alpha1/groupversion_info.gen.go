@@ -39,6 +39,7 @@ func init() {
 		&Honeytoken{}, &HoneytokenList{},
 		&AnomalyRule{}, &AnomalyRuleList{},
 		&ApprovalRule{}, &ApprovalRuleList{},
+		&QueryTemplate{}, &QueryTemplateList{},
 		&ProviderConfig{}, &ProviderConfigList{},
 		&ProviderConfigUsage{}, &ProviderConfigUsageList{},
 	)
@@ -146,4 +147,12 @@ var (
 	ApprovalRuleGroupKind        = schema.GroupKind{Group: Group, Kind: ApprovalRuleKind}.String()
 	ApprovalRuleKindAPIVersion   = ApprovalRuleKind + "." + SchemeGroupVersion.String()
 	ApprovalRuleGroupVersionKind = SchemeGroupVersion.WithKind(ApprovalRuleKind)
+)
+
+// QueryTemplate type metadata.
+var (
+	QueryTemplateKind             = reflect.TypeOf(QueryTemplate{}).Name()
+	QueryTemplateGroupKind        = schema.GroupKind{Group: Group, Kind: QueryTemplateKind}.String()
+	QueryTemplateKindAPIVersion   = QueryTemplateKind + "." + SchemeGroupVersion.String()
+	QueryTemplateGroupVersionKind = SchemeGroupVersion.WithKind(QueryTemplateKind)
 )

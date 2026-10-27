@@ -655,3 +655,53 @@ func (ar *ApprovalRule) GetPublishConnectionDetailsTo() *xpv1.PublishConnectionD
 func (ar *ApprovalRule) SetPublishConnectionDetailsTo(ref *xpv1.PublishConnectionDetailsTo) {
 	ar.Spec.PublishConnectionDetailsTo = ref
 }
+
+// Managed resource interface methods for QueryTemplate.
+
+func (qt *QueryTemplate) GetCondition(ct xpv1.ConditionType) xpv1.Condition {
+	return qt.Status.GetCondition(ct)
+}
+
+func (qt *QueryTemplate) SetConditions(c ...xpv1.Condition) {
+	qt.Status.SetConditions(c...)
+}
+
+func (qt *QueryTemplate) GetProviderConfigReference() *xpv1.Reference {
+	return qt.Spec.ProviderConfigReference
+}
+
+func (qt *QueryTemplate) SetProviderConfigReference(ref *xpv1.Reference) {
+	qt.Spec.ProviderConfigReference = ref
+}
+
+func (qt *QueryTemplate) GetDeletionPolicy() xpv1.DeletionPolicy {
+	return qt.Spec.DeletionPolicy
+}
+
+func (qt *QueryTemplate) SetDeletionPolicy(dp xpv1.DeletionPolicy) {
+	qt.Spec.DeletionPolicy = dp
+}
+
+func (qt *QueryTemplate) GetManagementPolicies() xpv1.ManagementPolicies {
+	return qt.Spec.ManagementPolicies
+}
+
+func (qt *QueryTemplate) SetManagementPolicies(mp xpv1.ManagementPolicies) {
+	qt.Spec.ManagementPolicies = mp
+}
+
+func (qt *QueryTemplate) GetWriteConnectionSecretToReference() *xpv1.SecretReference {
+	return qt.Spec.WriteConnectionSecretToReference
+}
+
+func (qt *QueryTemplate) SetWriteConnectionSecretToReference(ref *xpv1.SecretReference) {
+	qt.Spec.WriteConnectionSecretToReference = ref
+}
+
+func (qt *QueryTemplate) GetPublishConnectionDetailsTo() *xpv1.PublishConnectionDetailsTo {
+	return qt.Spec.PublishConnectionDetailsTo
+}
+
+func (qt *QueryTemplate) SetPublishConnectionDetailsTo(ref *xpv1.PublishConnectionDetailsTo) {
+	qt.Spec.PublishConnectionDetailsTo = ref
+}

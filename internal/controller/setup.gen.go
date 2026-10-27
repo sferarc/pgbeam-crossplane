@@ -24,6 +24,7 @@ func Setup(mgr ctrl.Manager, o controller.Options) error {
 		SetupHoneytoken,
 		SetupAnomalyRule,
 		SetupApprovalRule,
+		SetupQueryTemplate,
 	} {
 		if err := setup(mgr, o); err != nil {
 			return err

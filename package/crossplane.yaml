@@ -11,8 +11,10 @@ metadata:
     meta.crossplane.io/source: github.com/sferarc/pgbeam-crossplane
     meta.crossplane.io/license: Apache-2.0
     meta.crossplane.io/description: |
-      Crossplane provider for PgBeam — manage projects, databases, replicas,
-      custom domains, cache rules, and spend limits as Kubernetes resources.
+      Crossplane provider for PgBeam. Manage projects, databases, replicas,
+      custom domains, cache rules, spend limits, webhook endpoints, agent
+      credentials, approval rules, anomaly rules, honeytokens, policy
+      profiles and self-host enrollments as Kubernetes resources.
 spec:
   crossplane:
     version: ">=v1.14.0"

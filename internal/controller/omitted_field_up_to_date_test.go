@@ -1,6 +1,14 @@
 package controller
 
 import (
+	"encoding/json"
+	"io"
+	"net/http"
+	"net/http/httptest"
+	"reflect"
+	"slices"
+	"strings"
+	"sync"
 	"testing"
 
 	"github.com/sferarc/pgbeam-crossplane/apis/v1alpha1"
@@ -8,6 +16,109 @@ import (
 )
 
 func ptr[T any](v T) *T { return &v }
+
+// requireCases fails unless cases holds exactly one entry per field of typ,
+// minus skip, so a field added to a spec without a test case cannot pass.
+func requireCases[V any](t *testing.T, typ reflect.Type, cases map[string]V, skip ...string) {
+	t.Helper()
+	fields := map[string]bool{}
+	for f := range typ.Fields() {
+		if !slices.Contains(skip, f.Name) {
+			fields[f.Name] = true
+		}
+	}
+	for name := range fields {
+		if _, ok := cases[name]; !ok {
+			t.Errorf("%s.%s has no case", typ.Name(), name)
+		}
+	}
+	for name := range cases {
+		if !fields[name] {
+			t.Errorf("case %q names no field of %s", name, typ.Name())
+		}
+	}
+}
+
+// optionalFields lists the fields of typ a manifest may leave out.
+func optionalFields(typ reflect.Type) []string {
+	var out []string
+	for f := range typ.Fields() {
+		if strings.Contains(f.Tag.Get("json"), ",omitempty") {
+			out = append(out, f.Name)
+		}
+	}
+	return out
+}
+
+// jsonFieldNames lists the wire names of typ's fields.
+func jsonFieldNames(typ reflect.Type) []string {
+	var out []string
+	for f := range typ.Fields() {
+		out = append(out, strings.Split(f.Tag.Get("json"), ",")[0])
+	}
+	return out
+}
+
+type apiCall struct {
+	method string
+	body   []byte
+}
+
+// fakeAPI serves state on GET and records every other call, answering it with
+// the same state.
+type fakeAPI struct {
+	srv   *httptest.Server
+	mu    sync.Mutex
+	calls []apiCall
+}
+
+func newFakeAPI(t *testing.T, state any) *fakeAPI {
+	t.Helper()
+	payload, err := json.Marshal(state)
+	if err != nil {
+		t.Fatal(err)
+	}
+	f := &fakeAPI{}
+	f.srv = httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodGet {
+			body, _ := io.ReadAll(r.Body)
+			f.mu.Lock()
+			f.calls = append(f.calls, apiCall{method: r.Method, body: body})
+			f.mu.Unlock()
+		}
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = w.Write(payload)
+	}))
+	t.Cleanup(f.srv.Close)
+	return f
+}
+
+func (f *fakeAPI) client() *pgbeam.Client {
+	return pgbeam.NewClient(&pgbeam.ClientOptions{APIKey: "pgb_test", BaseURL: f.srv.URL})
+}
+
+func (f *fakeAPI) writes() []apiCall {
+	f.mu.Lock()
+	defer f.mu.Unlock()
+	return slices.Clone(f.calls)
+}
+
+// onlyWrite returns the single write the controller sent, decoded to keys.
+func (f *fakeAPI) onlyWrite(t *testing.T, method string) (apiCall, map[string]json.RawMessage) {
+	t.Helper()
+	calls := f.writes()
+	if len(calls) != 1 {
+		t.Fatalf("got %d writes, want 1", len(calls))
+	}
+	if calls[0].method != method {
+		t.Fatalf("method = %s, want %s", calls[0].method, method)
+	}
+	var keys map[string]json.RawMessage
+	if err := json.Unmarshal(calls[0].body, &keys); err != nil {
+		t.Fatalf("body %s: %v", calls[0].body, err)
+	}
+	return calls[0], keys
+}
 
 // A PUT stores the default (or null) for every field it omits, so a field
 // removed from the manifest while the server still holds a value is drift.
@@ -49,7 +160,7 @@ func TestOmittedFieldIsDriftOnFullReplacement(t *testing.T) {
 		server pgbeam.PolicyProfile
 		want   bool
 	}{
-		{"defaults on the server", pgbeam.PolicyProfile{Name: "agents", AccessMode: pgbeam.PolicyProfileAccessModeReadOnly}, true},
+		{"defaults on the server", pgbeam.PolicyProfile{Name: "agents", AccessMode: pgbeam.PolicyProfileAccessModeReadOnly, QueryMode: pgbeam.PolicyProfileQueryModeSql}, true},
 		{"write access held by the server", pgbeam.PolicyProfile{Name: "agents", AccessMode: readWrite}, false},
 		{"allowlist held by the server", pgbeam.PolicyProfile{Name: "agents", AccessMode: pgbeam.PolicyProfileAccessModeReadOnly, TableAllowlist: []string{"orders"}}, false},
 		{"row cap held by the server", pgbeam.PolicyProfile{Name: "agents", AccessMode: pgbeam.PolicyProfileAccessModeReadOnly, MaxRows: ptr(10)}, false},
