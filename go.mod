@@ -4,7 +4,7 @@ go 1.26.0
 
 require (
 	github.com/crossplane/crossplane-runtime v1.20.11
-	go.pgbeam.com/sdk v0.5.1
+	go.pgbeam.com/sdk v0.6.0
 	k8s.io/api v0.32.3
 	k8s.io/apiextensions-apiserver v0.32.1
 	k8s.io/apimachinery v0.32.3
