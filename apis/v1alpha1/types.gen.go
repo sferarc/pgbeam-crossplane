@@ -975,9 +975,9 @@ type MaskingRuleParameters struct {
 	// +kubebuilder:validation:Required
 	Column string `json:"column"`
 
-	// Kind is the how to mask. redact replaces with a token, null returns null, hash returns a sha-256 hex.
+	// Kind is the how to mask. redact replaces with a token, null returns null, hash returns a sha-256 hex, last4 keeps the final four characters behind "****", and email_domain keeps the domain behind "****@". a value too short for last4 or not shaped like an email for email_domain is redacted instead.
 	// +kubebuilder:validation:Required
-	// +kubebuilder:validation:Enum=redact;null;hash
+	// +kubebuilder:validation:Enum=redact;null;hash;last4;email_domain
 	Kind string `json:"kind"`
 }
 
