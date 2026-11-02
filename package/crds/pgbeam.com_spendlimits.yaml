@@ -320,6 +320,16 @@ spec:
                         description: MaxQueryShapes is the maximum query shapes in
                           cache rules. 0 means unlimited.
                         type: integer
+                      overagePer1k:
+                        description: OveragePer1k is the price in usd for each 1,000
+                          queries over the daily quota. 0 means the quota is a hard
+                          cap and no query overage is billed.
+                        type: number
+                      overagePerGb:
+                        description: OveragePerGb is the price in usd for each gb
+                          transferred over the monthly quota. 0 means the quota is
+                          a hard cap and no transfer overage is billed.
+                        type: number
                       queriesPerDay:
                         description: QueriesPerDay is the maximum queries per day
                           across all projects. 0 means unlimited.

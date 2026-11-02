@@ -168,6 +168,8 @@ func spendLimitObservation(o *pgbeam.OrganizationPlan) v1alpha1.SpendLimitAtProv
 		MaxConnections:          o.Limits.MaxConnections,
 		QueriesPerSecond:        o.Limits.QueriesPerSecond,
 		BytesPerMonth:           o.Limits.BytesPerMonth,
+		OveragePer1k:            o.Limits.OveragePer1k,
+		OveragePerGb:            o.Limits.OveragePerGb,
 		MaxQueryShapes:          o.Limits.MaxQueryShapes,
 		IncludedSeats:           o.Limits.IncludedSeats,
 		MaxAgentCredentials:     o.Limits.MaxAgentCredentials,

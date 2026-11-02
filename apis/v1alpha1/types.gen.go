@@ -747,6 +747,12 @@ type PlanLimitsObservation struct {
 	// BytesPerMonth is the monthly data transfer quota in bytes. 0 means unlimited.
 	BytesPerMonth int64 `json:"bytesPerMonth,omitempty"`
 
+	// OveragePer1k is the price in usd for each 1,000 queries over the daily quota. 0 means the quota is a hard cap and no query overage is billed.
+	OveragePer1k float64 `json:"overagePer1k,omitempty"`
+
+	// OveragePerGb is the price in usd for each gb transferred over the monthly quota. 0 means the quota is a hard cap and no transfer overage is billed.
+	OveragePerGb float64 `json:"overagePerGb,omitempty"`
+
 	// MaxQueryShapes is the maximum query shapes in cache rules. 0 means unlimited.
 	MaxQueryShapes int `json:"maxQueryShapes,omitempty"`
 
