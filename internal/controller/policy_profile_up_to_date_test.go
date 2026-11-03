@@ -44,6 +44,7 @@ func desiredPolicyProfile() v1alpha1.PolicyProfileForProvider {
 		ContentScanMode:        "block",
 		ContentScanMaxBytes:    ptr(int64(1 << 16)),
 		QueryMode:              "templates",
+		FunctionDenylist:       []string{"billing.recompute", "pg_terminate_backend"},
 	}
 }
 
@@ -73,6 +74,7 @@ func policyProfileMatching() *pgbeam.PolicyProfile {
 		ContentScanMode:        ptr(pgbeam.PolicyProfileContentScanMode("block")),
 		ContentScanMaxBytes:    ptr(int64(1 << 16)),
 		QueryMode:              pgbeam.PolicyProfileQueryModeTemplates,
+		FunctionDenylist:       []string{"billing.recompute", "pg_terminate_backend"},
 	}
 }
 
@@ -101,6 +103,7 @@ func policyProfileDefaults() *pgbeam.PolicyProfile {
 		ContentScanMode:        ptr(pgbeam.PolicyProfileContentScanMode("off")),
 		ContentScanMaxBytes:    ptr(int64(0)),
 		QueryMode:              pgbeam.PolicyProfileQueryModeSql,
+		FunctionDenylist:       []string{},
 	}
 }
 
@@ -141,6 +144,7 @@ func TestPolicyProfileFieldDrift(t *testing.T) {
 		},
 		"ContentScanMaxBytes": func(p *pgbeam.PolicyProfile) { p.ContentScanMaxBytes = nil },
 		"QueryMode":           func(p *pgbeam.PolicyProfile) { p.QueryMode = pgbeam.PolicyProfileQueryModeSql },
+		"FunctionDenylist":    func(p *pgbeam.PolicyProfile) { p.FunctionDenylist = p.FunctionDenylist[:1] },
 	}
 	requireCases(t, reflect.TypeFor[v1alpha1.PolicyProfileForProvider](), cases, "ProjectID")
 
@@ -194,6 +198,7 @@ func TestPolicyProfileOmittedFieldsCompareAgainstDefault(t *testing.T) {
 		"ContentScanMode":        func(p *pgbeam.PolicyProfile) { p.ContentScanMode = ptr(pgbeam.PolicyProfileContentScanMode("block")) },
 		"ContentScanMaxBytes":    func(p *pgbeam.PolicyProfile) { p.ContentScanMaxBytes = ptr(int64(1)) },
 		"QueryMode":              func(p *pgbeam.PolicyProfile) { p.QueryMode = pgbeam.PolicyProfileQueryModeTemplates },
+		"FunctionDenylist":       func(p *pgbeam.PolicyProfile) { p.FunctionDenylist = []string{"recompute"} },
 	}
 	typ := reflect.TypeFor[v1alpha1.PolicyProfileForProvider]()
 	requireCases(t, typ, offDefault, "ProjectID", "Name")
@@ -227,6 +232,11 @@ func TestPolicyProfileListDrift(t *testing.T) {
 		{"tableAllowlist reorder", func(p *pgbeam.PolicyProfile) { p.TableAllowlist = []string{"billing.invoices", "orders"} }},
 		{"tableDenylist add", func(p *pgbeam.PolicyProfile) { p.TableDenylist = append(p.TableDenylist, "audit") }},
 		{"tableDenylist remove", func(p *pgbeam.PolicyProfile) { p.TableDenylist = []string{} }},
+		{"functionDenylist add", func(p *pgbeam.PolicyProfile) { p.FunctionDenylist = append(p.FunctionDenylist, "pg_sleep") }},
+		{"functionDenylist remove", func(p *pgbeam.PolicyProfile) { p.FunctionDenylist = []string{} }},
+		{"functionDenylist reorder", func(p *pgbeam.PolicyProfile) {
+			p.FunctionDenylist = []string{"pg_terminate_backend", "billing.recompute"}
+		}},
 		{"maskingRules add", func(p *pgbeam.PolicyProfile) {
 			p.MaskingRules = append(p.MaskingRules, pgbeam.MaskingRule{Table: "users", Column: "phone", Kind: "null"})
 		}},

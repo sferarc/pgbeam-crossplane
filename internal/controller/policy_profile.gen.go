@@ -174,6 +174,9 @@ func (e *policyProfileExternal) Create(ctx context.Context, mg resource.Managed)
 		v := pgbeam.PolicyProfileInputQueryMode(fp.QueryMode)
 		req.QueryMode = &v
 	}
+	if fp.FunctionDenylist != nil {
+		req.FunctionDenylist = &fp.FunctionDenylist
+	}
 	if fp.StatementRules != nil {
 		req.StatementRules = &pgbeam.StatementRules{
 			Allow: fp.StatementRules.Allow,
@@ -285,6 +288,9 @@ func (e *policyProfileExternal) Update(ctx context.Context, mg resource.Managed)
 	if fp.QueryMode != "" {
 		v := pgbeam.PolicyProfileInputQueryMode(fp.QueryMode)
 		req.QueryMode = &v
+	}
+	if fp.FunctionDenylist != nil {
+		req.FunctionDenylist = &fp.FunctionDenylist
 	}
 	if fp.StatementRules != nil {
 		req.StatementRules = &pgbeam.StatementRules{
@@ -499,6 +505,20 @@ func isPolicyProfileUpToDate(fp v1alpha1.PolicyProfileForProvider, p *pgbeam.Pol
 	if fp.QueryMode != "" {
 		if fp.QueryMode != string(p.QueryMode) {
 			return false
+		}
+	}
+	if fp.FunctionDenylist == nil && len(p.FunctionDenylist) != 0 {
+		return false
+	}
+	if fp.FunctionDenylist != nil {
+		pTags := p.FunctionDenylist
+		if len(fp.FunctionDenylist) != len(pTags) {
+			return false
+		}
+		for i, t := range fp.FunctionDenylist {
+			if t != (pTags)[i] {
+				return false
+			}
 		}
 	}
 	if fp.StatementRules == nil && p.StatementRules != nil {

@@ -1126,6 +1126,10 @@ type PolicyProfileForProvider struct {
 	// +kubebuilder:validation:Enum=sql;templates
 	// +kubebuilder:default=sql
 	QueryMode string `json:"queryMode,omitempty"`
+
+	// FunctionDenylist is the functions an agent on this profile may not call, refused with sqlstate 42501 and decision rule function_denied. this adds to the proxy's built-in dangerous-function floor, which no profile can relax. matching is case-insensitive and sees every call in the statement, including inside a cte, a sub-select or a function argument. a bare entry (recompute) matches the name in every schema. a schema-qualified entry (billing.recompute) matches a call qualified with that schema and also an unqualified call of the same name, since the proxy cannot see where search_path resolves it. a function reached only through an operator, a cast, a view, a trigger or a column default is not matched. a proxy build older than this field ignores it, so the api refuses a non-empty list while the organization has a live self-hosted enrollment.
+	// +optional
+	FunctionDenylist []string `json:"functionDenylist,omitempty"`
 }
 
 // PolicyProfileAtProvider defines the observed state of a PolicyProfile.
